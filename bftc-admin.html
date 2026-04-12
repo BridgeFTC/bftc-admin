@@ -312,34 +312,81 @@
   <!-- TAB: STATS COMPARE -->
   <div class="tab-content" id="tab-compare">
     <div class="section-title">スタッツ比較</div>
-    <iframe
-      src="https://BridgeFTC.github.io/bftc-admin/bftc-stats-compare.html"
-      style="width:100%;height:calc(100vh - 180px);border:none;border-radius:4px;"
-      id="statsCompareFrame"
-    ></iframe>
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:32px;text-align:center;">
+      <div style="font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:2px;color:var(--text-dim);margin-bottom:12px;">スタッツ比較ツール</div>
+      <div style="font-size:13px;color:var(--text-dim);margin-bottom:24px;line-height:1.8;">
+        2名分のCAPCOMスタッツデータを貼り付けるだけで<br>
+        レーダーチャート・独自指標・実況スクリプトを自動生成します
+      </div>
+      <a href="https://BridgeFTC.github.io/bftc-admin/bftc-stats-compare.html" target="_blank"
+        style="display:inline-block;background:var(--accent);color:white;font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:2px;padding:14px 32px;border-radius:4px;text-decoration:none;">
+        ⚔ スタッツ比較を開く
+      </a>
+    </div>
   </div>
 
   <!-- TAB: INDIVIDUAL STATS -->
   <div class="tab-content" id="tab-stats">
-    <div class="section-title">個人スタッツ登録</div>
-    <div style="background:var(--surface);border:1px solid var(--border);border-radius:4px;padding:20px;margin-bottom:20px;">
+    <div class="section-title">個人スタッツ分析</div>
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:24px;margin-bottom:20px;">
       <div class="form-grid">
-        <div class="form-group"><label class="flabel">プレイヤー名 *</label><input type="text" id="s-player" placeholder="例：スト6太郎"></div>
-        <div class="form-group"><label class="flabel">ユーザーコード</label><input type="text" id="s-ucode" placeholder="例：1234567890"></div>
-        <div class="form-group"><label class="flabel">使用キャラ *</label><input type="text" id="s-chara" placeholder="例：リュウ"></div>
-        <div class="form-group"><label class="flabel">ランク帯 / MR</label><input type="text" id="s-rank" placeholder="例：マスター / MR1500"></div>
-        <div class="form-group"><label class="flabel">試合数 *</label><input type="number" id="s-games" min="0" placeholder="0"></div>
-        <div class="form-group"><label class="flabel">勝ち数 *</label><input type="number" id="s-wins" min="0" placeholder="0"></div>
-        <div class="form-group"><label class="flabel">対戦会名</label><input type="text" id="s-event" placeholder="例：BFTC第1回対戦会"></div>
-        <div class="form-group"><label class="flabel">メモ（任意）</label><input type="text" id="s-note" placeholder="任意メモ"></div>
+        <div class="form-group"><label class="flabel">プレイヤー名</label><input type="text" id="s-player" placeholder="例：スト6太郎"></div>
+        <div class="form-group">
+          <label class="flabel">ランク帯</label>
+          <select id="s-rank">
+            <option value="">選択してください（任意）</option>
+            <option>ROOKIE</option><option>IRON</option><option>BRONZE</option>
+            <option>SILVER</option><option>GOLD</option><option>PLATINUM</option>
+            <option>DIAMOND</option><option>MASTER〜1599</option><option>MASTER〜1699</option>
+            <option>MASTER〜1799</option><option>MASTER〜1899</option><option>MASTER〜2000</option>
+            <option>MASTER2000〜</option><option>LEGEND</option>
+          </select>
+        </div>
+        <div class="form-group"><label class="flabel">使用キャラクター</label><input type="text" id="s-chara" placeholder="例：リュウ"></div>
+        <div class="form-group">
+          <label class="flabel">操作タイプ</label>
+          <select id="s-op">
+            <option value="">選択してください（任意）</option>
+            <option>クラシック</option><option>モダン</option>
+          </select>
+        </div>
+        <div class="form-group full">
+          <label class="flabel">CAPCOMスタッツデータ（貼り付け）</label>
+          <textarea id="s-data" rows="10" placeholder="CAPCOMのデータをそのまま貼り付けてください&#10;&#10;例：&#10;ドライブパリィ&#10;15.27%&#10;ドライブインパクト&#10;3.70%..." style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:3px;color:var(--text);font-family:'Noto Sans JP',sans-serif;font-size:13px;padding:10px 12px;outline:none;resize:vertical;"></textarea>
+        </div>
       </div>
       <hr class="divider">
-      <button class="btn btn-primary" onclick="registerStats()">登録する</button>
+      <button class="btn btn-primary" onclick="analyzeStats()">分析する</button>
     </div>
 
-    <div class="section-title">個人スタッツ一覧</div>
-    <div id="statsTable">
-      <div class="empty"><div class="empty-icon">📊</div><div>まだスタッツが登録されていません</div></div>
+    <div id="statsResult" style="display:none;">
+      <div class="section-title">分析結果</div>
+
+      <!-- プレイヤーヘッダー -->
+      <div style="background:var(--surface);border:1px solid var(--border);border-top:3px solid var(--accent);border-radius:6px;padding:20px;margin-bottom:20px;text-align:center;">
+        <div id="sr-name" style="font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:2px;color:var(--accent);margin-bottom:4px;"></div>
+        <div id="sr-sub" style="font-size:12px;color:var(--text-dim);"></div>
+      </div>
+
+      <!-- レーダーチャート -->
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:24px;margin-bottom:20px;display:flex;flex-direction:column;align-items:center;">
+        <canvas id="singleRadar" width="400" height="400"></canvas>
+      </div>
+
+      <!-- ドライブゲージ -->
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:24px;margin-bottom:20px;">
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:2px;color:var(--text-dim);margin-bottom:16px;">ドライブゲージ使用傾向</div>
+        <div id="sr-drive"></div>
+      </div>
+
+      <!-- 独自指標 -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px;" id="sr-metrics"></div>
+
+      <!-- プレイスタイル総評 -->
+      <div style="background:var(--surface);border:1px solid var(--border);border-left:3px solid var(--accent);border-radius:6px;padding:24px;margin-bottom:20px;">
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:2px;color:var(--text-dim);margin-bottom:12px;">プレイスタイル総評</div>
+        <div id="sr-style" style="font-size:13px;line-height:1.9;color:var(--text-dim);"></div>
+      </div>
     </div>
   </div>
 
@@ -451,8 +498,8 @@
     document.getElementById('tab-'+id).classList.add('active');
     if(id==='list')     renderList();
     if(id==='matching') renderMatchSelect();
-    if(id==='compare')  renderCompareSelect();
-    if(id==='stats')    renderStatsTable();
+    if(id==='compare')  {} // iframeのため処理不要
+    if(id==='stats')    {} // 分析タブのため処理不要
     if(id==='results')  { renderResultsSelect(); renderResultsTable(); }
     if(id==='ranking')  renderRanking();
     updateStats();
@@ -707,38 +754,6 @@
   }
 
   // ===== スタッツ比較 =====
-  function renderCompareSelect() {
-    const div = document.getElementById('comparePlayerSelect');
-    if(stats.length===0) { div.innerHTML = '<span style="color:var(--text-dim);font-size:13px;">個人スタッツを先に登録してください</span>'; return; }
-    const players = [...new Set(stats.map(s => s.player))];
-    div.innerHTML = players.map(p => `
-      <label class="checkbox-item"><input type="checkbox" name="comparePlayer" value="${p}"> ${p}</label>
-    `).join('');
-  }
-
-  function runCompare() {
-    const selected = [...document.querySelectorAll('input[name="comparePlayer"]:checked')].map(el => el.value);
-    const div = document.getElementById('compareResult');
-    if(selected.length < 2) { showToast('⚠ 2人以上選択してください', '#e8003d'); return; }
-    div.innerHTML = `<div class="compare-grid">${selected.map(player => {
-      const playerStats = stats.filter(s => s.player === player);
-      const totalGames = playerStats.reduce((a,s) => a+s.games, 0);
-      const totalWins  = playerStats.reduce((a,s) => a+s.wins, 0);
-      const totalLoss  = totalGames - totalWins;
-      const winRate    = totalGames > 0 ? Math.round((totalWins/totalGames)*100) : 0;
-      const charas     = [...new Set(playerStats.map(s => s.chara))].join('・');
-      return `
-        <div class="compare-card">
-          <div class="compare-name">${player}</div>
-          <div class="compare-stat"><span>使用キャラ</span><span class="compare-val">${charas||'—'}</span></div>
-          <div class="compare-stat"><span>試合数</span><span class="compare-val">${totalGames}</span></div>
-          <div class="compare-stat"><span>勝ち</span><span class="compare-val" style="color:var(--green)">${totalWins}</span></div>
-          <div class="compare-stat"><span>負け</span><span class="compare-val" style="color:var(--accent)">${totalLoss}</span></div>
-          <div class="compare-stat"><span>勝率</span><span class="compare-val" style="color:${winRate>=50?'var(--green)':'var(--accent)'}">${winRate}%</span></div>
-        </div>`;
-    }).join('')}</div>`;
-  }
-
   // ===== 対戦結果 =====
   function renderResultsSelect() {
     ['r-teamA','r-teamB'].forEach(id => {
@@ -869,6 +884,157 @@
     };
     reader.readAsText(file);
     event.target.value = '';
+  }
+
+  // ===== 個人スタッツ分析 =====
+  function parseStatsData(text) {
+    const d = {};
+    const fullText = text;
+    const patterns = [
+      { key: 'dp',       regex: /ドライブパリィ\s*([\d.]+)%/ },
+      { key: 'di',       regex: /ドライブインパクト\s*([\d.]+)%/ },
+      { key: 'od',       regex: /オーバードライブアーツ\s*([\d.]+)%/ },
+      { key: 'pdr',      regex: /パリィドライブラッシュ\s*([\d.]+)%/ },
+      { key: 'cdr',      regex: /キャンセルドライブラッシュ\s*([\d.]+)%/ },
+      { key: 'dr',       regex: /ドライブリバーサル\s*([\d.]+)%/ },
+      { key: 'dmg',      regex: /ダメージ\s*([\d.]+)%/ },
+      { key: 'dpSuc',    regex: /成功回数\s*([\d.]+)回/ },
+      { key: 'justParry',regex: /ジャストパリィ回数\s*([\d.]+)回/ },
+      { key: 'sa1',      regex: /Lv1\s*([\d.]+)%/ },
+      { key: 'sa2',      regex: /Lv2\s*([\d.]+)%/ },
+      { key: 'sa3',      regex: /Lv3\s*([\d.]+)%/ },
+      { key: 'ca',       regex: /CA\s*([\d.]+)%/ },
+      { key: 'throwEsc', regex: /投げ抜け回数\s*([\d.]+)回/ },
+      { key: 'wallAtk',  regex: /相手を追い詰めている時間\s*([\d.]+)秒/ },
+      { key: 'wallDef',  regex: /相手に追い詰められている時間\s*([\d.]+)秒/ },
+      { key: 'rankMatch',regex: /ランクマッチプレイ回数\s*([\d,]+)回/ },
+      { key: 'pts',      regex: /累計プレイポイント\s*([\d,]+)PT/ },
+    ];
+    patterns.forEach(p => {
+      const m = fullText.match(p.regex);
+      if(m) d[p.key] = parseFloat(m[1].replace(/,/g,''));
+    });
+    const diHitMatches = fullText.match(/決めた回数\s*([\d.]+)回/g);
+    if(diHitMatches) {
+      d.diHit     = parseFloat(diHitMatches[0].match(/([\d.]+)/)[0]);
+      d.throwGive = diHitMatches.length >= 2 ? parseFloat(diHitMatches[diHitMatches.length-1].match(/([\d.]+)/)[0]) : 0;
+    }
+    const recvMatches = fullText.match(/受けた回数\s*([\d.]+)回/g);
+    if(recvMatches) {
+      d.diRecv    = parseFloat(recvMatches[0].match(/([\d.]+)/)[0]);
+      d.throwRecv = recvMatches.length >= 2 ? parseFloat(recvMatches[recvMatches.length-1].match(/([\d.]+)/)[0]) : 0;
+    }
+    return d;
+  }
+
+  function analyzeStats() {
+    const name   = document.getElementById('s-player').value.trim() || 'PLAYER';
+    const rank   = document.getElementById('s-rank').value;
+    const chara  = document.getElementById('s-chara').value.trim();
+    const op     = document.getElementById('s-op').value;
+    const text   = document.getElementById('s-data').value;
+    if(!text) { showToast('⚠ スタッツデータを貼り付けてください', '#e8003d'); return; }
+
+    const d = parseStatsData(text);
+    const attackIdx  = Math.min(100, Math.round(((d.cdr||0)+(d.od||0)+(d.pdr||0))*0.95));
+    const defenseIdx = Math.min(100, Math.round(((d.dp||0)+(d.dr||0)+(d.dmg||0))*1.2));
+    const wallCtrl   = d.wallAtk&&d.wallDef ? Math.round((d.wallAtk/(d.wallAtk+d.wallDef))*100) : 0;
+    const throwRatio = d.throwGive&&d.throwRecv ? Math.round((d.throwGive/(d.throwGive+d.throwRecv))*100) : 0;
+
+    const info = [rank, chara, op].filter(Boolean).join(' ／ ');
+    document.getElementById('sr-name').textContent = name;
+    document.getElementById('sr-sub').textContent = (info ? info + '　' : '') + `累計${(d.pts||0).toLocaleString()}PT / ランクマッチ${(d.rankMatch||0).toLocaleString()}回`;
+
+    const canvas = document.getElementById('singleRadar');
+    const ctx = canvas.getContext('2d');
+    const W = canvas.width, H = canvas.height;
+    const cx = W/2, cy = H/2, r = 150;
+    ctx.clearRect(0, 0, W, H);
+    const axes = [
+      { label:'攻撃圧力', val: attackIdx },
+      { label:'守備消耗', val: defenseIdx },
+      { label:'壁際支配', val: wallCtrl },
+      { label:'投げ攻め', val: throwRatio },
+      { label:'パリィ力', val: Math.min(100,(d.dpSuc||0)*20+(d.justParry||0)*15) },
+      { label:'SA活用',   val: Math.max(d.sa2||0, d.sa3||0) },
+    ];
+    const n = axes.length;
+    const angleStep = (Math.PI*2)/n;
+    for(let lv=1;lv<=5;lv++){
+      const rr=r*lv/5; ctx.beginPath();
+      for(let i=0;i<n;i++){const a=-Math.PI/2+angleStep*i;i===0?ctx.moveTo(cx+rr*Math.cos(a),cy+rr*Math.sin(a)):ctx.lineTo(cx+rr*Math.cos(a),cy+rr*Math.sin(a));}
+      ctx.closePath(); ctx.strokeStyle='#2a2a3a'; ctx.lineWidth=1; ctx.stroke();
+    }
+    for(let i=0;i<n;i++){
+      const a=-Math.PI/2+angleStep*i;
+      ctx.beginPath(); ctx.moveTo(cx,cy); ctx.lineTo(cx+r*Math.cos(a),cy+r*Math.sin(a));
+      ctx.strokeStyle='#2a2a3a'; ctx.lineWidth=1; ctx.stroke();
+      ctx.fillStyle='#7a7a9a'; ctx.font='bold 11px Noto Sans JP'; ctx.textAlign='center'; ctx.textBaseline='middle';
+      ctx.fillText(axes[i].label, cx+(r+24)*Math.cos(a), cy+(r+24)*Math.sin(a));
+    }
+    ctx.beginPath();
+    axes.forEach((ax,i)=>{
+      const a=-Math.PI/2+angleStep*i; const rr=r*Math.min(ax.val,100)/100;
+      i===0?ctx.moveTo(cx+rr*Math.cos(a),cy+rr*Math.sin(a)):ctx.lineTo(cx+rr*Math.cos(a),cy+rr*Math.sin(a));
+    });
+    ctx.closePath(); ctx.strokeStyle='#e8003d'; ctx.lineWidth=2.5; ctx.stroke();
+    ctx.fillStyle='rgba(232,0,61,0.2)'; ctx.fill();
+
+    const driveItems = [
+      { label:'キャンセルドラッシュ', val: d.cdr||0 },
+      { label:'ダメージ消費', val: d.dmg||0 },
+      { label:'OD技', val: d.od||0 },
+      { label:'ドライブパリィ', val: d.dp||0 },
+      { label:'パリィドラッシュ', val: d.pdr||0 },
+      { label:'ドライブインパクト', val: d.di||0 },
+      { label:'ドライブリバーサル', val: d.dr||0 },
+    ];
+    const maxVal = Math.max(...driveItems.map(x=>x.val), 1);
+    document.getElementById('sr-drive').innerHTML = driveItems.map(item => `
+      <div style="display:flex;align-items:center;gap:12px;padding:8px 0;border-bottom:1px solid var(--border);">
+        <div style="width:160px;font-size:12px;color:var(--text-dim);flex-shrink:0">${item.label}</div>
+        <div style="flex:1;height:6px;background:var(--border);border-radius:3px;overflow:hidden;">
+          <div style="width:${Math.round((item.val/maxVal)*100)}%;height:100%;background:var(--accent);border-radius:3px;"></div>
+        </div>
+        <div style="width:48px;text-align:right;font-weight:700;font-size:13px;">${item.val}%</div>
+      </div>
+    `).join('');
+
+    document.getElementById('sr-metrics').innerHTML = `
+      <div style="background:var(--surface2);border:1px solid var(--border);border-radius:4px;padding:16px;">
+        <div style="font-size:11px;color:var(--text-dim);letter-spacing:1px;margin-bottom:8px;">🔴 攻撃圧力指数</div>
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:36px;color:var(--accent)">${attackIdx}<span style="font-size:14px;font-family:'Noto Sans JP'">/100</span></div>
+        <div style="font-size:11px;color:var(--text-dim);margin-top:4px;">CDR＋OD＋パリィドラッシュ</div>
+      </div>
+      <div style="background:var(--surface2);border:1px solid var(--border);border-radius:4px;padding:16px;">
+        <div style="font-size:11px;color:var(--text-dim);letter-spacing:1px;margin-bottom:8px;">🔵 守備消耗度</div>
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:36px;color:var(--blue)">${defenseIdx}<span style="font-size:14px;font-family:'Noto Sans JP'">/100</span></div>
+        <div style="font-size:11px;color:var(--text-dim);margin-top:4px;">パリィ＋リバーサル＋ダメージ消費</div>
+      </div>
+      <div style="background:var(--surface2);border:1px solid var(--border);border-radius:4px;padding:16px;">
+        <div style="font-size:11px;color:var(--text-dim);letter-spacing:1px;margin-bottom:8px;">🟡 壁際支配率</div>
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:36px;color:var(--gold)">${wallCtrl}<span style="font-size:14px;font-family:'Noto Sans JP'">%</span></div>
+        <div style="font-size:11px;color:var(--text-dim);margin-top:4px;">追い詰め時間÷総壁際時間</div>
+      </div>
+      <div style="background:var(--surface2);border:1px solid var(--border);border-radius:4px;padding:16px;">
+        <div style="font-size:11px;color:var(--text-dim);letter-spacing:1px;margin-bottom:8px;">⚪ 投げ攻勢率</div>
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:36px;color:var(--green)">${throwRatio}<span style="font-size:14px;font-family:'Noto Sans JP'">%</span></div>
+        <div style="font-size:11px;color:var(--text-dim);margin-top:4px;">投げ命中÷（命中+被弾）</div>
+      </div>
+    `;
+
+    const styleLines = [];
+    styleLines.push(`過去100戦平均のバトルの傾向によると、キャンセルドラッシュ${d.cdr||0}%・OD技${d.od||0}%・パリィドラッシュ${d.pdr||0}%。攻撃圧力指数は${attackIdx}/100。`);
+    if(wallCtrl >= 55) styleLines.push(`壁際支配率${wallCtrl}%と高く、コーナーでの崩しを得意とする。`);
+    else if(wallCtrl <= 45) styleLines.push(`壁際支配率${wallCtrl}%と低め。追い詰められる場面が多い傾向がある。`);
+    else styleLines.push(`壁際の攻防は${wallCtrl}%とほぼ互角の展開が多い。`);
+    if(throwRatio >= 55) styleLines.push(`投げ攻勢率${throwRatio}%と投げを積極的に活用する崩し型。`);
+    else styleLines.push(`投げ攻勢率${throwRatio}%。投げよりも技での崩しを好むスタイル。`);
+    styleLines.push(`守備消耗度${defenseIdx}/100。${defenseIdx >= 50 ? 'ガードによるゲージ消耗が課題となる場面も。' : 'ゲージをしっかり攻撃に回せている。'}`);
+    document.getElementById('sr-style').innerHTML = styleLines.join('<br>');
+
+    document.getElementById('statsResult').style.display = 'block';
+    document.getElementById('statsResult').scrollIntoView({ behavior: 'smooth' });
   }
 
   updateStats();
