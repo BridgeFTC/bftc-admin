@@ -1,0 +1,883 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BFTC | 管理者ツール</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Noto+Sans+JP:wght@300;400;500;700&display=swap');
+
+  :root {
+    --bg: #0a0a0f; --surface: #111118; --surface2: #1a1a24; --border: #2a2a3a;
+    --accent: #e8003d; --accent2: #ff6b35; --gold: #f5c518;
+    --text: #e8e8f0; --text-dim: #7a7a9a; --green: #00e57a; --blue: #0099ff;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: 'Noto Sans JP', sans-serif; font-size: 14px; min-height: 100vh; }
+
+  /* PASSWORD SCREEN */
+  .pw-screen {
+    position: fixed; inset: 0; background: var(--bg);
+    display: flex; align-items: center; justify-content: center;
+    flex-direction: column; gap: 24px; z-index: 1000;
+  }
+
+  .pw-logo { font-family: 'Bebas Neue', sans-serif; font-size: 48px; letter-spacing: 6px; }
+  .pw-logo span { color: var(--accent); }
+  .pw-label { font-size: 12px; color: var(--text-dim); letter-spacing: 2px; text-transform: uppercase; }
+
+  .pw-input-wrap { display: flex; gap: 8px; }
+  .pw-input {
+    background: var(--surface2); border: 1px solid var(--border); border-radius: 3px;
+    color: var(--text); font-family: 'Noto Sans JP', sans-serif; font-size: 16px;
+    padding: 12px 16px; outline: none; width: 240px; transition: border-color 0.2s;
+  }
+  .pw-input:focus { border-color: var(--accent); }
+
+  .pw-btn {
+    background: var(--accent); border: none; border-radius: 3px; color: white;
+    font-family: 'Bebas Neue', sans-serif; font-size: 18px; letter-spacing: 2px;
+    padding: 12px 24px; cursor: pointer; transition: background 0.2s;
+  }
+  .pw-btn:hover { background: #c0002f; }
+  .pw-error { font-size: 12px; color: var(--accent); display: none; }
+
+  /* HEADER */
+  header { background: var(--surface); border-bottom: 2px solid var(--accent); padding: 0 32px; display: flex; align-items: center; justify-content: space-between; height: 64px; position: sticky; top: 0; z-index: 100; }
+  .logo { font-family: 'Bebas Neue', sans-serif; font-size: 28px; letter-spacing: 3px; }
+  .logo span { color: var(--accent); }
+  .header-right { display: flex; gap: 8px; align-items: center; }
+  .header-badge { background: var(--accent); color: white; font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: 2px; letter-spacing: 1px; }
+  .btn-header { background: transparent; border: 1px solid var(--border); color: var(--text-dim); font-family: 'Noto Sans JP', sans-serif; font-size: 11px; font-weight: 700; padding: 4px 12px; border-radius: 2px; cursor: pointer; transition: all 0.2s; }
+  .btn-header:hover { border-color: var(--accent); color: var(--accent); }
+
+  /* LAYOUT */
+  .container { max-width: 1200px; margin: 0 auto; padding: 32px 24px; }
+  .section-title { font-family: 'Bebas Neue', sans-serif; font-size: 22px; letter-spacing: 2px; color: var(--text-dim); margin-bottom: 16px; border-left: 3px solid var(--accent); padding-left: 12px; }
+
+  /* TABS */
+  .tabs { display: flex; gap: 4px; margin-bottom: 28px; background: var(--surface); padding: 4px; border-radius: 4px; border: 1px solid var(--border); flex-wrap: wrap; }
+  .tab { flex: 1; min-width: 100px; padding: 10px 8px; background: transparent; border: none; color: var(--text-dim); font-family: 'Noto Sans JP', sans-serif; font-size: 12px; font-weight: 500; cursor: pointer; border-radius: 3px; transition: all 0.2s; white-space: nowrap; }
+  .tab.active { background: var(--accent); color: white; }
+  .tab-content { display: none; }
+  .tab-content.active { display: block; }
+
+  /* STATS BAR */
+  .stats-bar { display: flex; gap: 16px; margin-bottom: 28px; flex-wrap: wrap; }
+  .stat-box { background: var(--surface); border: 1px solid var(--border); border-radius: 4px; padding: 14px 20px; flex: 1; min-width: 120px; text-align: center; }
+  .stat-num { font-family: 'Bebas Neue', sans-serif; font-size: 32px; color: var(--accent); line-height: 1; }
+  .stat-desc { font-size: 11px; color: var(--text-dim); margin-top: 2px; }
+
+  /* FORM */
+  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .form-group { display: flex; flex-direction: column; gap: 6px; }
+  .form-group.full { grid-column: 1 / -1; }
+  label.flabel { font-size: 11px; font-weight: 700; color: var(--text-dim); letter-spacing: 1px; text-transform: uppercase; }
+  input[type="text"], input[type="number"], select, textarea { background: var(--surface2); border: 1px solid var(--border); border-radius: 3px; color: var(--text); font-family: 'Noto Sans JP', sans-serif; font-size: 13px; padding: 10px 12px; outline: none; transition: border-color 0.2s; width: 100%; }
+  input:focus, select:focus, textarea:focus { border-color: var(--accent); }
+  select option { background: var(--surface2); }
+
+  .checkbox-group { display: flex; flex-wrap: wrap; gap: 8px; }
+  .checkbox-item { display: flex; align-items: center; gap: 6px; background: var(--surface2); border: 1px solid var(--border); padding: 6px 12px; border-radius: 3px; cursor: pointer; transition: all 0.2s; font-size: 12px; }
+  .checkbox-item:has(input:checked) { border-color: var(--accent); background: rgba(232,0,61,0.1); color: var(--accent); }
+  .checkbox-item input { display: none; }
+
+  /* BUTTONS */
+  .btn { padding: 12px 24px; border: none; border-radius: 3px; font-family: 'Noto Sans JP', sans-serif; font-weight: 700; font-size: 13px; cursor: pointer; transition: all 0.2s; }
+  .btn-primary { background: var(--accent); color: white; }
+  .btn-primary:hover { background: #c0002f; }
+  .btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text-dim); }
+  .btn-outline:hover { border-color: var(--accent); color: var(--accent); }
+  .btn-small { padding: 6px 14px; font-size: 12px; }
+  .btn-danger { background: transparent; border: 1px solid var(--border); color: var(--text-dim); }
+  .btn-danger:hover { border-color: #e8003d; color: #e8003d; }
+
+  /* CARDS */
+  .team-grid { display: grid; gap: 12px; }
+  .team-card { background: var(--surface); border: 1px solid var(--border); border-radius: 4px; padding: 20px; display: grid; grid-template-columns: 1fr auto; gap: 12px; align-items: center; transition: border-color 0.2s; cursor: pointer; }
+  .team-card:hover { border-color: var(--accent); }
+  .team-name-display { font-family: 'Bebas Neue', sans-serif; font-size: 20px; letter-spacing: 1px; margin-bottom: 6px; }
+  .team-meta { display: flex; flex-wrap: wrap; gap: 8px; }
+  .tag { font-size: 11px; padding: 3px 8px; border-radius: 2px; font-weight: 500; }
+  .tag-region { background: rgba(0,153,255,0.15); color: var(--blue); border: 1px solid rgba(0,153,255,0.3); }
+  .tag-freq { background: rgba(255,107,53,0.15); color: var(--accent2); border: 1px solid rgba(255,107,53,0.3); }
+  .tag-rank { background: rgba(245,197,24,0.15); color: var(--gold); border: 1px solid rgba(245,197,24,0.3); }
+  .tag-format { background: rgba(0,229,122,0.15); color: var(--green); border: 1px solid rgba(0,229,122,0.3); }
+  .team-actions { display: flex; gap: 8px; }
+
+  /* MATCHING */
+  .match-header { background: var(--surface); border: 1px solid var(--border); border-radius: 4px; padding: 20px; margin-bottom: 20px; display: flex; align-items: center; gap: 16px; }
+  .match-source-name { font-family: 'Bebas Neue', sans-serif; font-size: 24px; color: var(--accent); letter-spacing: 1px; }
+  .match-label { font-size: 11px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 1px; }
+  .match-results { display: grid; gap: 10px; }
+  .match-card { background: var(--surface); border: 1px solid var(--border); border-radius: 4px; padding: 16px 20px; display: grid; grid-template-columns: 40px 1fr auto; gap: 16px; align-items: center; cursor: pointer; }
+  .match-card:hover { border-color: var(--accent); }
+  .match-rank { font-family: 'Bebas Neue', sans-serif; font-size: 32px; color: var(--text-dim); line-height: 1; }
+  .match-rank.rank-1 { color: var(--gold); }
+  .match-rank.rank-2 { color: #c0c0c0; }
+  .match-rank.rank-3 { color: #cd7f32; }
+  .score-bar-wrap { text-align: right; min-width: 120px; }
+  .score-value { font-family: 'Bebas Neue', sans-serif; font-size: 28px; line-height: 1; margin-bottom: 4px; }
+  .score-high { color: var(--green); }
+  .score-mid { color: var(--gold); }
+  .score-low { color: var(--text-dim); }
+  .score-bar { height: 4px; background: var(--border); border-radius: 2px; overflow: hidden; }
+  .score-fill { height: 100%; border-radius: 2px; }
+  .score-breakdown { display: flex; gap: 6px; margin-top: 8px; flex-wrap: wrap; }
+  .breakdown-item { font-size: 10px; color: var(--text-dim); background: var(--surface2); padding: 2px 7px; border-radius: 2px; }
+  .breakdown-item.match { color: var(--green); background: rgba(0,229,122,0.1); }
+
+  /* MODAL */
+  .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 200; align-items: center; justify-content: center; }
+  .modal-overlay.open { display: flex; }
+  .modal { background: var(--surface); border: 1px solid var(--border); border-radius: 6px; padding: 32px; width: 90%; max-width: 480px; max-height: 80vh; overflow-y: auto; }
+  .modal-title { font-family: 'Bebas Neue', sans-serif; font-size: 22px; letter-spacing: 1px; margin-bottom: 20px; color: var(--accent); }
+  .stat-row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid var(--border); font-size: 13px; }
+  .stat-row:last-child { border-bottom: none; }
+  .stat-label { color: var(--text-dim); min-width: 130px; }
+  .stat-value { font-weight: 500; text-align: right; }
+
+  /* TABLE */
+  .data-table { width: 100%; border-collapse: collapse; }
+  .data-table th { background: var(--surface2); color: var(--text-dim); font-size: 11px; letter-spacing: 1px; text-transform: uppercase; padding: 10px 12px; text-align: left; border-bottom: 1px solid var(--border); }
+  .data-table td { padding: 12px; border-bottom: 1px solid var(--border); font-size: 13px; }
+  .data-table tr:hover td { background: var(--surface2); }
+  .data-table tr:last-child td { border-bottom: none; }
+
+  /* RANKING */
+  .rank-table { width: 100%; border-collapse: collapse; }
+  .rank-table th { background: var(--surface2); color: var(--text-dim); font-size: 11px; letter-spacing: 1px; padding: 10px 12px; text-align: left; border-bottom: 1px solid var(--border); }
+  .rank-table td { padding: 12px; border-bottom: 1px solid var(--border); font-size: 13px; }
+  .rank-table .rank-1st td { color: var(--gold); }
+  .rank-table .rank-2nd td { color: #c0c0c0; }
+  .rank-table .rank-3rd td { color: #cd7f32; }
+  .rank-num { font-family: 'Bebas Neue', sans-serif; font-size: 24px; }
+
+  /* STATS COMPARE */
+  .compare-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-top: 20px; }
+  .compare-card { background: var(--surface); border: 1px solid var(--border); border-radius: 4px; padding: 20px; }
+  .compare-name { font-family: 'Bebas Neue', sans-serif; font-size: 18px; color: var(--accent); margin-bottom: 12px; }
+  .compare-stat { display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid var(--border); font-size: 12px; }
+  .compare-stat:last-child { border-bottom: none; }
+  .compare-val { font-weight: 700; color: var(--green); }
+
+  /* MISC */
+  .empty { text-align: center; padding: 60px 20px; color: var(--text-dim); }
+  .empty-icon { font-size: 40px; margin-bottom: 12px; }
+  .divider { border: none; border-top: 1px solid var(--border); margin: 24px 0; }
+  .toast { position: fixed; bottom: 24px; right: 24px; background: var(--green); color: #000; padding: 12px 20px; border-radius: 4px; font-weight: 700; font-size: 13px; transform: translateY(80px); opacity: 0; transition: all 0.3s; z-index: 999; }
+  .toast.show { transform: translateY(0); opacity: 1; }
+  .win-badge { background: rgba(0,229,122,0.15); color: var(--green); border: 1px solid rgba(0,229,122,0.3); padding: 2px 8px; border-radius: 2px; font-size: 11px; font-weight: 700; }
+  .lose-badge { background: rgba(232,0,61,0.15); color: var(--accent); border: 1px solid rgba(232,0,61,0.3); padding: 2px 8px; border-radius: 2px; font-size: 11px; font-weight: 700; }
+</style>
+</head>
+<body>
+
+<!-- PASSWORD SCREEN -->
+<div class="pw-screen" id="pwScreen">
+  <div class="pw-logo">B<span>F</span>TC</div>
+  <div class="pw-label">管理者専用 — パスワードを入力してください</div>
+  <div class="pw-input-wrap">
+    <input type="password" class="pw-input" id="pwInput" placeholder="パスワード" onkeydown="if(event.key==='Enter')checkPw()">
+    <button class="pw-btn" onclick="checkPw()">入室</button>
+  </div>
+  <div class="pw-error" id="pwError">パスワードが違います</div>
+</div>
+
+<!-- MAIN APP -->
+<div id="mainApp" style="display:none">
+
+<header>
+  <div class="logo">B<span>F</span>TC <span style="font-size:16px;color:var(--text-dim);letter-spacing:1px;">ADMIN</span></div>
+  <div class="header-right">
+    <button class="btn-header" onclick="exportData()">📥 エクスポート</button>
+    <button class="btn-header" onclick="document.getElementById('importFile').click()">📤 インポート</button>
+    <input type="file" id="importFile" accept=".json" style="display:none" onchange="importData(event)">
+    <div class="header-badge">管理者専用</div>
+  </div>
+</header>
+
+<div class="container">
+
+  <div class="stats-bar">
+    <div class="stat-box"><div class="stat-num" id="statTotal">0</div><div class="stat-desc">登録チーム数</div></div>
+    <div class="stat-box"><div class="stat-num" id="statMatches">0</div><div class="stat-desc">対戦数</div></div>
+    <div class="stat-box"><div class="stat-num" id="statPlayers">0</div><div class="stat-desc">登録選手数</div></div>
+    <div class="stat-box"><div class="stat-num" id="statAvgMatch">—</div><div class="stat-desc">平均マッチ率</div></div>
+  </div>
+
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab('register')">チーム登録</button>
+    <button class="tab" onclick="switchTab('list')">チーム一覧</button>
+    <button class="tab" onclick="switchTab('matching')">マッチング</button>
+    <button class="tab" onclick="switchTab('compare')">スタッツ比較</button>
+    <button class="tab" onclick="switchTab('stats')">個人スタッツ</button>
+    <button class="tab" onclick="switchTab('results')">対戦結果</button>
+    <button class="tab" onclick="switchTab('ranking')">順位表</button>
+  </div>
+
+  <!-- TAB: REGISTER -->
+  <div class="tab-content active" id="tab-register">
+    <div class="section-title">チーム情報登録</div>
+    <div class="form-grid">
+      <div class="form-group"><label class="flabel">チーム名 *</label><input type="text" id="f-name" placeholder="例：Kansai Warriors"></div>
+      <div class="form-group"><label class="flabel">代表者名 / Discord ID *</label><input type="text" id="f-rep" placeholder="例：スト6太郎 / sto#6666"></div>
+      <div class="form-group">
+        <label class="flabel">メイン活動地域 *</label>
+        <select id="f-region">
+          <option value="">選択してください</option>
+          <option>全国</option><option>北海道</option><option>東北</option><option>関東</option>
+          <option>東海</option><option>北陸</option><option>近畿</option><option>中国</option>
+          <option>四国</option><option>九州・沖縄</option>
+        </select>
+      </div>
+      <div class="form-group"><label class="flabel">メンバー人数 *</label><input type="text" id="f-members" placeholder="例：8人"></div>
+      <div class="form-group">
+        <label class="flabel">活動頻度 *</label>
+        <select id="f-freq">
+          <option value="">選択してください</option>
+          <option>週1以上</option><option>月2〜3回</option><option>月1程度</option><option>不定期</option>
+        </select>
+      </div>
+      <div class="form-group"><label class="flabel">希望時間帯 *</label><input type="text" id="f-time" placeholder="例：20時〜23時"></div>
+      <div class="form-group full">
+        <label class="flabel">自チームランク幅 *</label>
+        <div class="checkbox-group" id="f-teamrank">
+          <label class="checkbox-item"><input type="checkbox" value="マスター未満">マスター未満</label>
+          <label class="checkbox-item"><input type="checkbox" value="チームの半分はマスター以上">チームの半分はマスター以上</label>
+          <label class="checkbox-item"><input type="checkbox" value="チームの半分以上はグラマス以上">チームの半分以上はグラマス以上</label>
+          <label class="checkbox-item"><input type="checkbox" value="チーム全員アルマス以上">チーム全員アルマス以上</label>
+        </div>
+      </div>
+      <div class="form-group full">
+        <label class="flabel">マッチ希望ランク帯 *</label>
+        <div class="checkbox-group" id="f-matchrank">
+          <label class="checkbox-item"><input type="checkbox" value="マスター未満">マスター未満</label>
+          <label class="checkbox-item"><input type="checkbox" value="チームの半分はマスター以上">チームの半分はマスター以上</label>
+          <label class="checkbox-item"><input type="checkbox" value="チームの半分以上はグラマス以上">チームの半分以上はグラマス以上</label>
+          <label class="checkbox-item"><input type="checkbox" value="チーム全員アルマス以上">チーム全員アルマス以上</label>
+        </div>
+      </div>
+      <div class="form-group full">
+        <label class="flabel">希望対戦形式 *</label>
+        <div class="checkbox-group" id="f-formats">
+          <label class="checkbox-item"><input type="checkbox" value="オンラインチーム戦">オンラインチーム戦</label>
+          <label class="checkbox-item"><input type="checkbox" value="個人○先">個人○先</label>
+          <label class="checkbox-item"><input type="checkbox" value="総当たり（複数チームで）">総当たり（複数チームで）</label>
+          <label class="checkbox-item"><input type="checkbox" value="その他">その他</label>
+        </div>
+      </div>
+      <div class="form-group full">
+        <label class="flabel">希望曜日 *</label>
+        <div class="checkbox-group" id="f-days">
+          <label class="checkbox-item"><input type="checkbox" value="月">月</label>
+          <label class="checkbox-item"><input type="checkbox" value="火">火</label>
+          <label class="checkbox-item"><input type="checkbox" value="水">水</label>
+          <label class="checkbox-item"><input type="checkbox" value="木">木</label>
+          <label class="checkbox-item"><input type="checkbox" value="金">金</label>
+          <label class="checkbox-item"><input type="checkbox" value="土">土</label>
+          <label class="checkbox-item"><input type="checkbox" value="日">日</label>
+        </div>
+      </div>
+      <div class="form-group full"><label class="flabel">コメント・要望（任意）</label><textarea id="f-note" rows="3" placeholder="チームのPRや要望など"></textarea></div>
+    </div>
+    <hr class="divider">
+    <div style="display:flex;gap:10px;">
+      <button class="btn btn-primary" onclick="registerTeam()">登録する</button>
+      <button class="btn btn-outline" onclick="clearTeamForm()">クリア</button>
+    </div>
+  </div>
+
+  <!-- TAB: LIST -->
+  <div class="tab-content" id="tab-list">
+    <div class="section-title">登録チーム一覧</div>
+    <div class="team-grid" id="teamGrid">
+      <div class="empty"><div class="empty-icon">⚔️</div><div>まだチームが登録されていません</div></div>
+    </div>
+  </div>
+
+  <!-- TAB: MATCHING -->
+  <div class="tab-content" id="tab-matching">
+    <div class="section-title">マッチング候補を探す</div>
+    <div class="form-group" style="margin-bottom:20px;max-width:320px;">
+      <label class="flabel">対象チームを選択</label>
+      <select id="matchSource" onchange="runMatching()">
+        <option value="">— チームを選んでください —</option>
+      </select>
+    </div>
+    <div id="matchResult"></div>
+  </div>
+
+  <!-- TAB: STATS COMPARE -->
+  <div class="tab-content" id="tab-compare">
+    <div class="section-title">スタッツ比較</div>
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:4px;padding:20px;margin-bottom:20px;">
+      <div class="form-grid">
+        <div class="form-group full">
+          <label class="flabel">比較するプレイヤーを選択（複数選択可）</label>
+          <div class="checkbox-group" id="comparePlayerSelect"></div>
+        </div>
+      </div>
+      <hr class="divider">
+      <button class="btn btn-primary" onclick="runCompare()">比較する</button>
+    </div>
+    <div id="compareResult"></div>
+  </div>
+
+  <!-- TAB: INDIVIDUAL STATS -->
+  <div class="tab-content" id="tab-stats">
+    <div class="section-title">個人スタッツ登録</div>
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:4px;padding:20px;margin-bottom:20px;">
+      <div class="form-grid">
+        <div class="form-group"><label class="flabel">プレイヤー名 *</label><input type="text" id="s-player" placeholder="例：スト6太郎"></div>
+        <div class="form-group"><label class="flabel">ユーザーコード</label><input type="text" id="s-ucode" placeholder="例：1234567890"></div>
+        <div class="form-group"><label class="flabel">使用キャラ *</label><input type="text" id="s-chara" placeholder="例：リュウ"></div>
+        <div class="form-group"><label class="flabel">ランク帯 / MR</label><input type="text" id="s-rank" placeholder="例：マスター / MR1500"></div>
+        <div class="form-group"><label class="flabel">試合数 *</label><input type="number" id="s-games" min="0" placeholder="0"></div>
+        <div class="form-group"><label class="flabel">勝ち数 *</label><input type="number" id="s-wins" min="0" placeholder="0"></div>
+        <div class="form-group"><label class="flabel">対戦会名</label><input type="text" id="s-event" placeholder="例：BFTC第1回対戦会"></div>
+        <div class="form-group"><label class="flabel">メモ（任意）</label><input type="text" id="s-note" placeholder="任意メモ"></div>
+      </div>
+      <hr class="divider">
+      <button class="btn btn-primary" onclick="registerStats()">登録する</button>
+    </div>
+
+    <div class="section-title">個人スタッツ一覧</div>
+    <div id="statsTable">
+      <div class="empty"><div class="empty-icon">📊</div><div>まだスタッツが登録されていません</div></div>
+    </div>
+  </div>
+
+  <!-- TAB: RESULTS -->
+  <div class="tab-content" id="tab-results">
+    <div class="section-title">対戦結果登録</div>
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:4px;padding:20px;margin-bottom:20px;">
+      <div class="form-grid">
+        <div class="form-group">
+          <label class="flabel">チームA *</label>
+          <select id="r-teamA"><option value="">選択してください</option></select>
+        </div>
+        <div class="form-group">
+          <label class="flabel">チームB *</label>
+          <select id="r-teamB"><option value="">選択してください</option></select>
+        </div>
+        <div class="form-group">
+          <label class="flabel">勝者 *</label>
+          <select id="r-winner"><option value="">選択してください</option><option value="A">チームA</option><option value="B">チームB</option><option value="draw">引き分け</option></select>
+        </div>
+        <div class="form-group">
+          <label class="flabel">スコア</label>
+          <input type="text" id="r-score" placeholder="例：3-1">
+        </div>
+        <div class="form-group">
+          <label class="flabel">対戦形式</label>
+          <select id="r-format">
+            <option value="">選択してください</option>
+            <option>オンラインチーム戦</option><option>個人○先</option><option>総当たり（複数チームで）</option><option>その他</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="flabel">対戦会名</label>
+          <input type="text" id="r-event" placeholder="例：BFTC第1回対戦会">
+        </div>
+        <div class="form-group full"><label class="flabel">備考（任意）</label><input type="text" id="r-note" placeholder="任意メモ"></div>
+      </div>
+      <hr class="divider">
+      <button class="btn btn-primary" onclick="registerResult()">登録する</button>
+    </div>
+
+    <div class="section-title">対戦結果一覧</div>
+    <div id="resultsTable">
+      <div class="empty"><div class="empty-icon">⚔️</div><div>まだ対戦結果が登録されていません</div></div>
+    </div>
+  </div>
+
+  <!-- TAB: RANKING -->
+  <div class="tab-content" id="tab-ranking">
+    <div class="section-title">順位表</div>
+    <div id="rankingTable">
+      <div class="empty"><div class="empty-icon">🏆</div><div>対戦結果を登録すると順位表が表示されます</div></div>
+    </div>
+  </div>
+
+</div>
+</div>
+
+<!-- MODAL -->
+<div class="modal-overlay" id="detailModal">
+  <div class="modal">
+    <div class="modal-title" id="modalTitle">チーム詳細</div>
+    <div id="modalBody"></div>
+    <hr class="divider">
+    <div style="display:flex;gap:8px;">
+      <button class="btn btn-outline btn-small" onclick="closeModal()">閉じる</button>
+      <button class="btn btn-primary btn-small" onclick="goMatchFromModal()">このチームでマッチング</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+  // ★ パスワードをここに設定してください
+  const PASSWORD = 'BFTC2026';
+
+  // データ
+  let teams   = JSON.parse(localStorage.getItem('bftc_teams_v3')   || '[]');
+  let stats   = JSON.parse(localStorage.getItem('bftc_stats_v1')   || '[]');
+  let results = JSON.parse(localStorage.getItem('bftc_results_v1') || '[]');
+  let modalTeamId = null;
+
+  // パスワード確認
+  function checkPw() {
+    const val = document.getElementById('pwInput').value;
+    if (val === PASSWORD) {
+      document.getElementById('pwScreen').style.display = 'none';
+      document.getElementById('mainApp').style.display = 'block';
+      updateStats();
+    } else {
+      document.getElementById('pwError').style.display = 'block';
+      document.getElementById('pwInput').value = '';
+    }
+  }
+
+  function save() {
+    localStorage.setItem('bftc_teams_v3',   JSON.stringify(teams));
+    localStorage.setItem('bftc_stats_v1',   JSON.stringify(stats));
+    localStorage.setItem('bftc_results_v1', JSON.stringify(results));
+  }
+
+  // タブ切り替え
+  function switchTab(id) {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+    const tabIds = ['register','list','matching','compare','stats','results','ranking'];
+    document.querySelectorAll('.tab')[tabIds.indexOf(id)].classList.add('active');
+    document.getElementById('tab-'+id).classList.add('active');
+    if(id==='list')     renderList();
+    if(id==='matching') renderMatchSelect();
+    if(id==='compare')  renderCompareSelect();
+    if(id==='stats')    renderStatsTable();
+    if(id==='results')  { renderResultsSelect(); renderResultsTable(); }
+    if(id==='ranking')  renderRanking();
+    updateStats();
+  }
+
+  // ヘルパー
+  function getChecked(groupId) {
+    return [...document.querySelectorAll(`#${groupId} input:checked`)].map(el => el.value);
+  }
+
+  function showToast(msg, bg='var(--green)') {
+    const toast = document.getElementById('toast');
+    toast.textContent = msg;
+    toast.style.background = bg;
+    toast.style.color = bg === 'var(--green)' ? '#000' : '#fff';
+    toast.classList.add('show');
+    setTimeout(() => toast.classList.remove('show'), 2800);
+  }
+
+  function updateStats() {
+    document.getElementById('statTotal').textContent   = teams.length;
+    document.getElementById('statMatches').textContent = results.length;
+    document.getElementById('statPlayers').textContent = stats.length;
+  }
+
+  // ===== チーム登録 =====
+  function registerTeam() {
+    const name      = document.getElementById('f-name').value.trim();
+    const rep       = document.getElementById('f-rep').value.trim();
+    const region    = document.getElementById('f-region').value;
+    const members   = document.getElementById('f-members').value.trim();
+    const freq      = document.getElementById('f-freq').value;
+    const time      = document.getElementById('f-time').value.trim();
+    const teamRank  = getChecked('f-teamrank');
+    const matchRank = getChecked('f-matchrank');
+    const formats   = getChecked('f-formats');
+    const days      = getChecked('f-days');
+
+    if(!name||!rep||!region||!members||!freq||!time||teamRank.length===0||matchRank.length===0||formats.length===0||days.length===0) {
+      showToast('⚠ 必須項目をすべて入力してください', '#e8003d'); return;
+    }
+
+    teams.push({
+      id: Date.now(), name, rep, region, members, freq, time,
+      teamRank, matchRank, formats, days,
+      note: document.getElementById('f-note').value.trim(),
+      registeredAt: new Date().toLocaleDateString('ja-JP')
+    });
+    save(); clearTeamForm(); updateStats();
+    showToast('✓ ' + name + ' を登録しました');
+  }
+
+  function clearTeamForm() {
+    ['f-name','f-rep','f-members','f-time','f-note'].forEach(id => document.getElementById(id).value = '');
+    ['f-region','f-freq'].forEach(id => document.getElementById(id).value = '');
+    ['f-teamrank','f-matchrank','f-formats','f-days'].forEach(id => {
+      document.querySelectorAll(`#${id} input`).forEach(el => el.checked = false);
+    });
+  }
+
+  // ===== チーム一覧 =====
+  function renderList() {
+    const grid = document.getElementById('teamGrid');
+    if(teams.length===0) {
+      grid.innerHTML = '<div class="empty"><div class="empty-icon">⚔️</div><div>まだチームが登録されていません</div></div>'; return;
+    }
+    grid.innerHTML = teams.map(t => `
+      <div class="team-card" onclick="openModal(${t.id})">
+        <div>
+          <div class="team-name-display">${t.name}</div>
+          <div class="team-meta">
+            <span class="tag tag-region">📍 ${t.region}</span>
+            <span class="tag tag-freq">🕐 ${t.freq}</span>
+            <span class="tag tag-rank">⚡ ${t.teamRank.join('・')}</span>
+            ${t.formats.map(f=>`<span class="tag tag-format">${f}</span>`).join('')}
+          </div>
+        </div>
+        <div class="team-actions">
+          <button class="btn btn-danger btn-small" onclick="event.stopPropagation();deleteTeam(${t.id})">削除</button>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  function deleteTeam(id) {
+    if(!confirm('このチームを削除しますか？')) return;
+    teams = teams.filter(t => t.id !== id);
+    save(); renderList(); updateStats();
+  }
+
+  function openModal(id) {
+    modalTeamId = id;
+    const t = teams.find(t => t.id === id);
+    document.getElementById('modalTitle').textContent = t.name;
+    document.getElementById('modalBody').innerHTML = `
+      <div class="stat-row"><span class="stat-label">代表者</span><span class="stat-value">${t.rep}</span></div>
+      <div class="stat-row"><span class="stat-label">活動地域</span><span class="stat-value">${t.region}</span></div>
+      <div class="stat-row"><span class="stat-label">メンバー人数</span><span class="stat-value">${t.members}</span></div>
+      <div class="stat-row"><span class="stat-label">活動頻度</span><span class="stat-value">${t.freq}</span></div>
+      <div class="stat-row"><span class="stat-label">自チームランク幅</span><span class="stat-value">${t.teamRank.join('、')}</span></div>
+      <div class="stat-row"><span class="stat-label">マッチ希望ランク帯</span><span class="stat-value">${t.matchRank.join('、')}</span></div>
+      <div class="stat-row"><span class="stat-label">希望対戦形式</span><span class="stat-value">${t.formats.join('、')}</span></div>
+      <div class="stat-row"><span class="stat-label">希望曜日</span><span class="stat-value">${t.days.join('・')}</span></div>
+      <div class="stat-row"><span class="stat-label">希望時間帯</span><span class="stat-value">${t.time}</span></div>
+      ${t.note ? `<div class="stat-row"><span class="stat-label">コメント</span><span class="stat-value">${t.note}</span></div>` : ''}
+      <div class="stat-row"><span class="stat-label">登録日</span><span class="stat-value">${t.registeredAt}</span></div>
+    `;
+    document.getElementById('detailModal').classList.add('open');
+  }
+
+  function closeModal() { document.getElementById('detailModal').classList.remove('open'); }
+
+  function goMatchFromModal() {
+    closeModal(); switchTab('matching');
+    document.getElementById('matchSource').value = modalTeamId;
+    runMatching();
+  }
+
+  // ===== マッチング =====
+  function renderMatchSelect() {
+    const sel = document.getElementById('matchSource');
+    const cur = sel.value;
+    sel.innerHTML = '<option value="">— チームを選んでください —</option>';
+    teams.forEach(t => {
+      const opt = document.createElement('option');
+      opt.value = t.id; opt.textContent = t.name; sel.appendChild(opt);
+    });
+    if(cur) sel.value = cur;
+  }
+
+  function calcScore(a, b) {
+    let score = 0, breakdown = [];
+    const dayOverlap = a.days.filter(d => b.days.includes(d)).length;
+    score += Math.round((dayOverlap / Math.max(a.days.length, b.days.length)) * 30);
+    breakdown.push({ label:`曜日${dayOverlap}日一致`, match: dayOverlap > 0 });
+    const freqOrder = ['不定期','月1程度','月2〜3回','週1以上'];
+    const freqDiff = Math.abs(freqOrder.indexOf(a.freq) - freqOrder.indexOf(b.freq));
+    score += freqDiff===0 ? 25 : freqDiff===1 ? 15 : freqDiff===2 ? 5 : 0;
+    breakdown.push({ label:`頻度差${freqDiff}`, match: freqDiff <= 1 });
+    const rankOverlap = a.matchRank.filter(r => b.teamRank.includes(r)).length;
+    score += rankOverlap > 0 ? 20 : 0;
+    breakdown.push({ label: rankOverlap > 0 ? 'ランク相性あり' : 'ランク不一致', match: rankOverlap > 0 });
+    const formatOverlap = a.formats.filter(f => b.formats.includes(f)).length;
+    score += Math.round((formatOverlap / Math.max(a.formats.length, b.formats.length)) * 15);
+    breakdown.push({ label:`形式${formatOverlap}件一致`, match: formatOverlap > 0 });
+    if(a.region === b.region) { score += 10; breakdown.push({ label:'地域一致', match:true }); }
+    else { breakdown.push({ label:'地域違い', match:false }); }
+    return { score, breakdown };
+  }
+
+  function runMatching() {
+    const sourceId = parseInt(document.getElementById('matchSource').value);
+    const resultDiv = document.getElementById('matchResult');
+    if(!sourceId) { resultDiv.innerHTML = ''; return; }
+    if(teams.length < 2) {
+      resultDiv.innerHTML = '<div class="empty"><div>マッチング対象のチームが不足しています（2チーム以上必要）</div></div>'; return;
+    }
+    const source = teams.find(t => t.id === sourceId);
+    const results_m = teams.filter(t => t.id !== sourceId).map(t => ({ team: t, ...calcScore(source, t) })).sort((a,b) => b.score - a.score);
+    const avgScore = results_m.length ? Math.round(results_m.reduce((s,r)=>s+r.score,0)/results_m.length) : 0;
+    document.getElementById('statAvgMatch').textContent = avgScore + '%';
+    resultDiv.innerHTML = `
+      <div class="match-header">
+        <div><div class="match-label">対象チーム</div><div class="match-source-name">${source.name}</div></div>
+        <div style="margin-left:auto;text-align:right;"><div class="match-label">候補チーム数</div><div style="font-family:'Bebas Neue',sans-serif;font-size:28px">${results_m.length}</div></div>
+      </div>
+      <div class="match-results">
+        ${results_m.map((r,i) => {
+          const sc = r.score;
+          const cls = sc>=70?'score-high':sc>=40?'score-mid':'score-low';
+          const fill = sc>=70?'var(--green)':sc>=40?'var(--gold)':'var(--text-dim)';
+          const rankCls = i===0?'rank-1':i===1?'rank-2':i===2?'rank-3':'';
+          return `
+            <div class="match-card" onclick="openModal(${r.team.id})">
+              <div class="match-rank ${rankCls}">${i+1}</div>
+              <div>
+                <div class="team-name-display" style="font-size:18px;margin-bottom:6px">${r.team.name}</div>
+                <div class="team-meta">
+                  <span class="tag tag-region">📍 ${r.team.region}</span>
+                  <span class="tag tag-freq">🕐 ${r.team.freq}</span>
+                  <span class="tag tag-rank">⚡ ${r.team.teamRank.join('・')}</span>
+                </div>
+                <div class="score-breakdown">${r.breakdown.map(b=>`<span class="breakdown-item ${b.match?'match':''}">${b.label}</span>`).join('')}</div>
+              </div>
+              <div class="score-bar-wrap">
+                <div class="score-value ${cls}">${sc}<span style="font-size:14px;font-family:'Noto Sans JP'">点</span></div>
+                <div class="score-bar"><div class="score-fill" style="width:${sc}%;background:${fill}"></div></div>
+              </div>
+            </div>`;
+        }).join('')}
+      </div>`;
+  }
+
+  // ===== 個人スタッツ =====
+  function registerStats() {
+    const player = document.getElementById('s-player').value.trim();
+    const chara  = document.getElementById('s-chara').value.trim();
+    const games  = parseInt(document.getElementById('s-games').value) || 0;
+    const wins   = parseInt(document.getElementById('s-wins').value) || 0;
+    if(!player || !chara) { showToast('⚠ プレイヤー名と使用キャラは必須です', '#e8003d'); return; }
+    if(wins > games) { showToast('⚠ 勝ち数が試合数を超えています', '#e8003d'); return; }
+    stats.push({
+      id: Date.now(), player, chara,
+      ucode: document.getElementById('s-ucode').value.trim(),
+      rank:  document.getElementById('s-rank').value.trim(),
+      games, wins, losses: games - wins,
+      winRate: games > 0 ? Math.round((wins/games)*100) : 0,
+      event: document.getElementById('s-event').value.trim(),
+      note:  document.getElementById('s-note').value.trim(),
+      registeredAt: new Date().toLocaleDateString('ja-JP')
+    });
+    save();
+    ['s-player','s-ucode','s-chara','s-rank','s-games','s-wins','s-event','s-note'].forEach(id => document.getElementById(id).value = '');
+    renderStatsTable();
+    showToast('✓ スタッツを登録しました');
+  }
+
+  function renderStatsTable() {
+    const div = document.getElementById('statsTable');
+    if(stats.length===0) {
+      div.innerHTML = '<div class="empty"><div class="empty-icon">📊</div><div>まだスタッツが登録されていません</div></div>'; return;
+    }
+    div.innerHTML = `
+      <table class="data-table">
+        <thead><tr>
+          <th>プレイヤー名</th><th>使用キャラ</th><th>ランク帯/MR</th>
+          <th>試合数</th><th>勝ち</th><th>負け</th><th>勝率</th><th>対戦会</th><th>登録日</th><th></th>
+        </tr></thead>
+        <tbody>
+          ${stats.map(s => `
+            <tr>
+              <td><strong>${s.player}</strong>${s.ucode?`<br><span style="font-size:11px;color:var(--text-dim)">${s.ucode}</span>`:''}</td>
+              <td>${s.chara}</td>
+              <td>${s.rank||'—'}</td>
+              <td>${s.games}</td>
+              <td style="color:var(--green)">${s.wins}</td>
+              <td style="color:var(--accent)">${s.losses}</td>
+              <td><strong style="color:${s.winRate>=50?'var(--green)':'var(--accent)'}">${s.winRate}%</strong></td>
+              <td>${s.event||'—'}</td>
+              <td>${s.registeredAt}</td>
+              <td><button class="btn btn-danger btn-small" onclick="deleteStat(${s.id})">削除</button></td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>`;
+  }
+
+  function deleteStat(id) {
+    if(!confirm('このスタッツを削除しますか？')) return;
+    stats = stats.filter(s => s.id !== id);
+    save(); renderStatsTable(); updateStats();
+  }
+
+  // ===== スタッツ比較 =====
+  function renderCompareSelect() {
+    const div = document.getElementById('comparePlayerSelect');
+    if(stats.length===0) { div.innerHTML = '<span style="color:var(--text-dim);font-size:13px;">個人スタッツを先に登録してください</span>'; return; }
+    const players = [...new Set(stats.map(s => s.player))];
+    div.innerHTML = players.map(p => `
+      <label class="checkbox-item"><input type="checkbox" name="comparePlayer" value="${p}"> ${p}</label>
+    `).join('');
+  }
+
+  function runCompare() {
+    const selected = [...document.querySelectorAll('input[name="comparePlayer"]:checked')].map(el => el.value);
+    const div = document.getElementById('compareResult');
+    if(selected.length < 2) { showToast('⚠ 2人以上選択してください', '#e8003d'); return; }
+    div.innerHTML = `<div class="compare-grid">${selected.map(player => {
+      const playerStats = stats.filter(s => s.player === player);
+      const totalGames = playerStats.reduce((a,s) => a+s.games, 0);
+      const totalWins  = playerStats.reduce((a,s) => a+s.wins, 0);
+      const totalLoss  = totalGames - totalWins;
+      const winRate    = totalGames > 0 ? Math.round((totalWins/totalGames)*100) : 0;
+      const charas     = [...new Set(playerStats.map(s => s.chara))].join('・');
+      return `
+        <div class="compare-card">
+          <div class="compare-name">${player}</div>
+          <div class="compare-stat"><span>使用キャラ</span><span class="compare-val">${charas||'—'}</span></div>
+          <div class="compare-stat"><span>試合数</span><span class="compare-val">${totalGames}</span></div>
+          <div class="compare-stat"><span>勝ち</span><span class="compare-val" style="color:var(--green)">${totalWins}</span></div>
+          <div class="compare-stat"><span>負け</span><span class="compare-val" style="color:var(--accent)">${totalLoss}</span></div>
+          <div class="compare-stat"><span>勝率</span><span class="compare-val" style="color:${winRate>=50?'var(--green)':'var(--accent)'}">${winRate}%</span></div>
+        </div>`;
+    }).join('')}</div>`;
+  }
+
+  // ===== 対戦結果 =====
+  function renderResultsSelect() {
+    ['r-teamA','r-teamB'].forEach(id => {
+      const sel = document.getElementById(id);
+      sel.innerHTML = '<option value="">選択してください</option>';
+      teams.forEach(t => {
+        const opt = document.createElement('option');
+        opt.value = t.name; opt.textContent = t.name; sel.appendChild(opt);
+      });
+    });
+  }
+
+  function registerResult() {
+    const teamA  = document.getElementById('r-teamA').value;
+    const teamB  = document.getElementById('r-teamB').value;
+    const winner = document.getElementById('r-winner').value;
+    if(!teamA || !teamB || !winner) { showToast('⚠ チームAB・勝者は必須です', '#e8003d'); return; }
+    if(teamA === teamB) { showToast('⚠ 同じチームは選択できません', '#e8003d'); return; }
+    const winnerName = winner==='A' ? teamA : winner==='B' ? teamB : '引き分け';
+    results.push({
+      id: Date.now(), teamA, teamB, winner, winnerName,
+      score:  document.getElementById('r-score').value.trim(),
+      format: document.getElementById('r-format').value,
+      event:  document.getElementById('r-event').value.trim(),
+      note:   document.getElementById('r-note').value.trim(),
+      date:   new Date().toLocaleDateString('ja-JP')
+    });
+    save();
+    ['r-score','r-event','r-note'].forEach(id => document.getElementById(id).value = '');
+    ['r-teamA','r-teamB','r-winner','r-format'].forEach(id => document.getElementById(id).value = '');
+    renderResultsTable(); updateStats();
+    showToast('✓ 対戦結果を登録しました');
+  }
+
+  function renderResultsTable() {
+    const div = document.getElementById('resultsTable');
+    if(results.length===0) {
+      div.innerHTML = '<div class="empty"><div class="empty-icon">⚔️</div><div>まだ対戦結果が登録されていません</div></div>'; return;
+    }
+    div.innerHTML = `
+      <table class="data-table">
+        <thead><tr><th>日付</th><th>チームA</th><th>チームB</th><th>勝者</th><th>スコア</th><th>形式</th><th>対戦会</th><th></th></tr></thead>
+        <tbody>
+          ${results.map(r => `
+            <tr>
+              <td>${r.date}</td>
+              <td>${r.teamA}</td>
+              <td>${r.teamB}</td>
+              <td><span class="${r.winner==='draw'?'':'win-badge'}">${r.winnerName}</span></td>
+              <td>${r.score||'—'}</td>
+              <td>${r.format||'—'}</td>
+              <td>${r.event||'—'}</td>
+              <td><button class="btn btn-danger btn-small" onclick="deleteResult(${r.id})">削除</button></td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>`;
+  }
+
+  function deleteResult(id) {
+    if(!confirm('この対戦結果を削除しますか？')) return;
+    results = results.filter(r => r.id !== id);
+    save(); renderResultsTable(); updateStats();
+  }
+
+  // ===== 順位表 =====
+  function renderRanking() {
+    const div = document.getElementById('rankingTable');
+    if(results.length===0) {
+      div.innerHTML = '<div class="empty"><div class="empty-icon">🏆</div><div>対戦結果を登録すると順位表が表示されます</div></div>'; return;
+    }
+    const rankMap = {};
+    results.forEach(r => {
+      if(!rankMap[r.teamA]) rankMap[r.teamA] = { name:r.teamA, games:0, wins:0, losses:0, draws:0 };
+      if(!rankMap[r.teamB]) rankMap[r.teamB] = { name:r.teamB, games:0, wins:0, losses:0, draws:0 };
+      rankMap[r.teamA].games++;
+      rankMap[r.teamB].games++;
+      if(r.winner==='A')    { rankMap[r.teamA].wins++; rankMap[r.teamB].losses++; }
+      else if(r.winner==='B') { rankMap[r.teamB].wins++; rankMap[r.teamA].losses++; }
+      else { rankMap[r.teamA].draws++; rankMap[r.teamB].draws++; }
+    });
+    const ranking = Object.values(rankMap).sort((a,b) => b.wins - a.wins || a.losses - b.losses);
+    div.innerHTML = `
+      <table class="rank-table">
+        <thead><tr><th>順位</th><th>チーム名</th><th>試合数</th><th>勝ち</th><th>負け</th><th>引分</th></tr></thead>
+        <tbody>
+          ${ranking.map((t,i) => `
+            <tr class="${i===0?'rank-1st':i===1?'rank-2nd':i===2?'rank-3rd':''}">
+              <td><span class="rank-num">${i+1}</span></td>
+              <td><strong>${t.name}</strong></td>
+              <td>${t.games}</td>
+              <td style="color:var(--green)">${t.wins}</td>
+              <td style="color:var(--accent)">${t.losses}</td>
+              <td>${t.draws}</td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>`;
+  }
+
+  // ===== エクスポート・インポート =====
+  function exportData() {
+    const data = { teams, stats, results };
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `bftc_admin_${new Date().toLocaleDateString('ja-JP').replace(/\//g,'')}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+    showToast('✓ エクスポートしました');
+  }
+
+  function importData(event) {
+    const file = event.target.files[0];
+    if(!file) return;
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      try {
+        const imported = JSON.parse(e.target.result);
+        if(!confirm('データをインポートします。既存データに追加されます。よろしいですか？')) return;
+        if(imported.teams)   teams   = [...teams,   ...imported.teams.filter(t => !teams.find(ex => ex.id===t.id))];
+        if(imported.stats)   stats   = [...stats,   ...imported.stats.filter(s => !stats.find(ex => ex.id===s.id))];
+        if(imported.results) results = [...results, ...imported.results.filter(r => !results.find(ex => ex.id===r.id))];
+        save(); updateStats();
+        showToast('✓ インポートしました');
+      } catch(err) { showToast('⚠ インポートに失敗しました', '#e8003d'); }
+    };
+    reader.readAsText(file);
+    event.target.value = '';
+  }
+
+  updateStats();
+</script>
+</body>
+</html>
