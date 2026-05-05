@@ -1446,55 +1446,18 @@ function generateCastScript(nameA, nameB, dA, dB, mA, mB, sA, sB, wallCtrlA, wal
 
 // ===== X投稿文生成 =====
 function generateXPost(nameA, nameB, titleA, titleB, charaA, charaB, styleA, styleB, dA, dB, mA, mB, wallCtrlA, wallCtrlB, throwRatioA, throwRatioB, tA1Cat, tB1Cat) {
-  // 根拠を短く生成
-  function shortReason(d, m, wallCtrl, throwRatio, category) {
-    switch(category) {
-      case 'cdr_high':     return `CDR${d.cdr||0}%の前進圧力`;
-      case 'od_high':      return `OD技${d.od||0}%の爆発力`;
-      case 'pdr_high':     return `パリィドライブラッシュ${d.pdr||0}%の攻守転換`;
-      case 'wall_high':    return `壁際支配率${wallCtrl}%のコーナー制圧`;
-      case 'throw_high':   return `投げ攻勢率${throwRatio}%の崩し力`;
-      case 'parry_high':   return `パリィ成功${d.dpSuc||0}回の弾き精度`;
-      case 'just_high':    return `ジャストパリィ${d.justParry||0}回の神反射`;
-      case 'sa3_high':     return `SA3使用率${d.sa3||0}%の大技主義`;
-      case 'sa2_high':     return `SA2使用率${d.sa2||0}%のテンポ攻め`;
-      case 'veteran':      return `ランクマッチ${(d.rankMatch||0).toLocaleString()}回の場数`;
-      case 'efficient':    return `ダメージ消費${d.dmg||0}%の効率立ち回り`;
-      case 'defense':      return `守備消耗度${m.defenseIdx}/100の耐久力`;
-      case 'reversal':     return `リバーサル${d.dr||0}%の切り返し`;
-      case 'di_high':      return `DI命中${d.diHit||0}回の強打`;
-      case 'ground_control': return `地上戦主体の読み合い`;
-      case 'pressure':     return `攻撃圧力指数${m.attackIdx}/100の前進力`;
-      default: {
-        const opts = [
-          { val: d.cdr||0,   text: `CDR${d.cdr||0}%` },
-          { val: d.od||0,    text: `OD技${d.od||0}%` },
-          { val: d.pdr||0,   text: `パリィドライブラッシュ${d.pdr||0}%` },
-          { val: wallCtrl,   text: `壁際支配率${wallCtrl}%` },
-          { val: throwRatio, text: `投げ攻勢率${throwRatio}%` },
-          { val: d.dpSuc||0, text: `パリィ成功${d.dpSuc||0}回` },
-        ].sort((a,b) => b.val - a.val);
-        return opts[0].text + 'が最も突出した特徴。この数字からこの二つ名に。';
-      }
-    }
-  }
-
-  const reasonA = shortReason(dA, mA, wallCtrlA, throwRatioA, tA1Cat);
-  const reasonB = shortReason(dB, mB, wallCtrlB, throwRatioB, tB1Cat);
   const charaLineA = charaA ? `(${charaA})` : '';
   const charaLineB = charaB ? `(${charaB})` : '';
 
   const text = `⚔️ 対戦カード紹介
 
 ${nameA}${charaLineA}
-今回の二つ名「${titleA}」
-→${reasonA}
+『${titleA}』
 
 vs
 
 ${nameB}${charaLineB}
-今回の二つ名「${titleB}」
-→${reasonB}
+『${titleB}』
 
 📺 twitch.tv/bridgeftc
 #BridgeFTC #対戦カード`;
