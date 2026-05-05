@@ -831,32 +831,7 @@ function generateCompare() {
 
   document.getElementById('xPost').innerHTML = `
     <div class="cast-script-card">
-      <div class="cast-script-label">🐦 X投稿文</div>
-
-      <div style="margin-bottom:14px;">
-        <div style="font-size:11px;color:var(--text-dim);letter-spacing:1px;font-weight:700;margin-bottom:8px;">${nameA} の二つ名を選択</div>
-        <div style="display:flex;gap:8px;flex-wrap:wrap;">
-          ${[tA1,tA2,tA3].map((t,i) => `
-            <button id="btnA${i}" onclick="selectXTitle('A',${i})"
-              style="background:${i===0?'var(--accent)':'var(--surface2)'};border:1px solid ${i===0?'var(--accent)':'var(--border)'};color:${i===0?'white':'var(--text-dim)'};padding:8px 14px;border-radius:3px;cursor:pointer;font-family:'Noto Sans JP',sans-serif;font-size:12px;transition:all 0.2s;">
-              ${'①②③'[i]} 『${t}』
-            </button>
-          `).join('')}
-        </div>
-      </div>
-
-      <div style="margin-bottom:16px;">
-        <div style="font-size:11px;color:var(--text-dim);letter-spacing:1px;font-weight:700;margin-bottom:8px;">${nameB} の二つ名を選択</div>
-        <div style="display:flex;gap:8px;flex-wrap:wrap;">
-          ${[tB1,tB2,tB3].map((t,i) => `
-            <button id="btnB${i}" onclick="selectXTitle('B',${i})"
-              style="background:${i===0?'var(--accent)':'var(--surface2)'};border:1px solid ${i===0?'var(--accent)':'var(--border)'};color:${i===0?'white':'var(--text-dim)'};padding:8px 14px;border-radius:3px;cursor:pointer;font-family:'Noto Sans JP',sans-serif;font-size:12px;transition:all 0.2s;">
-              ${'①②③'[i]} 『${t}』
-            </button>
-          `).join('')}
-        </div>
-      </div>
-
+      <div class="cast-script-label">🐦 X投稿文<span style="font-size:11px;color:var(--text-dim);margin-left:12px;font-family:'Noto Sans JP',sans-serif;font-weight:400;">※二つ名セクションで選択した内容が反映されます</span></div>
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
         <span class="cast-script-label" id="xCharCount"></span>
         <button class="btn-copy" onclick="copyXPost()" style="position:static;">コピー</button>
@@ -1521,6 +1496,7 @@ ${nameB}${charaLineB}
 今回の二つ名「${titleB}」
 →${reasonB}
 
+📺 twitch.tv/bridgeftc
 #BridgeFTC #対戦カード`;
 
   return text.length <= 140 ? text : text.slice(0, 137) + '...';
@@ -1544,18 +1520,17 @@ function selectXTitle(player, index) {
 }
 
 function updateXPost() {
-  if(!window._xData) return;
-  const x = window._xData;
+  if(!window._titleData) return;
+  const x = window._titleData;
   const iA = x.selectedA, iB = x.selectedB;
+  const tA = x.titlesA[iA], tB = x.titlesB[iB];
+  const tACat = x.catsA[iA], tBCat = x.catsB[iB];
   const text = generateXPost(
-    x.nameA, x.nameB,
-    x.titlesA[iA], x.titlesB[iB],
-    x.charaA, x.charaB,
-    x.sA.type, x.sB.type,
+    x.nameA, x.nameB, tA, tB,
+    x.charaA, x.charaB, x.sA.type, x.sB.type,
     x.dA, x.dB, x.mA, x.mB,
-    x.wallCtrlA, x.wallCtrlB,
-    x.throwRatioA, x.throwRatioB,
-    x.catsA[iA], x.catsB[iB]
+    x.wallCtrlA, x.wallCtrlB, x.throwRatioA, x.throwRatioB,
+    tACat, tBCat
   );
   const el = document.getElementById('xPostText');
   const cnt = document.getElementById('xCharCount');
