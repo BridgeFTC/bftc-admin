@@ -1430,7 +1430,7 @@ function generateCastScript(nameA, nameB, dA, dB, mA, mB, sA, sB, wallCtrlA, wal
 
   return `
     さあ始まりました！本日の注目カードは<em>${nameA}</em> vs <em>${nameB}</em>！<br><br>
-    今回の対戦会における二つ名は、${nameA}が<em>『${titleA}』</em>、${nameB}が<em>『${titleB}』</em>です。<br><br>
+    今回の対戦カードは<em>『${titleA}』${nameA}</em>と<em>『${titleB}』${nameB}</em>です。<br><br>
     ${infoA ? `${nameA}は<em>${infoA}</em>。` : ''}過去100戦平均のバトルの傾向によると、${nameA}のプレイスタイルは<em>${keyA}</em>型。
     キャンセルドライブラッシュ${dA.cdr||0}%、OD技${dA.od||0}%と、ゲージを攻撃に集中させる前線圧力型プレイヤーです。<br><br>
     ${infoB ? `対する${nameB}は<em>${infoB}</em>。` : `対する${nameB}は`}<em>${keyB}</em>型。
@@ -1451,13 +1451,11 @@ function generateXPost(nameA, nameB, titleA, titleB, charaA, charaB, styleA, sty
 
   const text = `⚔️ 対戦カード紹介
 
-${nameA}${charaLineA}
-『${titleA}』
+『${titleA}』${nameA}${charaLineA}
 
 vs
 
-${nameB}${charaLineB}
-『${titleB}』
+『${titleB}』${nameB}${charaLineB}
 
 📺 twitch.tv/bridgeftc
 #BridgeFTC #対戦カード`;
