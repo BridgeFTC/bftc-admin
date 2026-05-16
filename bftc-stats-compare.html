@@ -1,0 +1,1370 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BFTC | スタッツ比較</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Noto+Sans+JP:wght@300;400;500;700&display=swap');
+
+  :root {
+    --bg: #0a0a0f; --surface: #111118; --surface2: #1a1a24; --border: #2a2a3a;
+    --accent: #e8003d; --gold: #f5c518; --text: #e8e8f0; --text-dim: #7a7a9a;
+    --green: #00e57a; --blue: #0099ff; --purple: #9b59b6;
+    --playerA: #e8003d; --playerB: #0099ff;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: 'Noto Sans JP', sans-serif; font-size: 14px; min-height: 100vh; }
+
+  header { background: var(--surface); border-bottom: 2px solid var(--accent); padding: 0 32px; display: flex; align-items: center; justify-content: space-between; height: 64px; }
+  .logo { font-family: 'Bebas Neue', sans-serif; font-size: 28px; letter-spacing: 3px; }
+  .logo span { color: var(--accent); }
+
+  .container { max-width: 1200px; margin: 0 auto; padding: 32px 24px; }
+
+  .input-section { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 28px; }
+
+  .player-input { background: var(--surface); border: 1px solid var(--border); border-radius: 6px; padding: 20px; }
+  .player-input.playerA { border-top: 3px solid var(--playerA); }
+  .player-input.playerB { border-top: 3px solid var(--playerB); }
+
+  .player-label { font-family: 'Bebas Neue', sans-serif; font-size: 18px; letter-spacing: 2px; margin-bottom: 12px; }
+  .playerA .player-label { color: var(--playerA); }
+  .playerB .player-label { color: var(--playerB); }
+
+  .name-input { width: 100%; background: var(--surface2); border: 1px solid var(--border); border-radius: 3px; color: var(--text); font-family: 'Noto Sans JP', sans-serif; font-size: 14px; padding: 10px 12px; outline: none; margin-bottom: 10px; transition: border-color 0.2s; }
+  .name-input:focus { border-color: var(--accent); }
+
+  .data-textarea { width: 100%; height: 200px; background: var(--surface2); border: 1px solid var(--border); border-radius: 3px; color: var(--text); font-family: 'Noto Sans JP', sans-serif; font-size: 12px; padding: 10px 12px; outline: none; resize: vertical; line-height: 1.6; transition: border-color 0.2s; }
+  .data-textarea:focus { border-color: var(--accent); }
+  .data-textarea::placeholder { color: var(--text-dim); }
+
+  .btn-generate { width: 100%; padding: 16px; background: var(--accent); border: none; border-radius: 4px; color: white; font-family: 'Bebas Neue', sans-serif; font-size: 22px; letter-spacing: 3px; cursor: pointer; transition: all 0.2s; margin-bottom: 32px; }
+  .btn-generate:hover { background: #c0002f; }
+
+  .result-section { display: none; }
+  .result-section.visible { display: block; }
+
+  .section-title { font-family: 'Bebas Neue', sans-serif; font-size: 20px; letter-spacing: 2px; color: var(--text-dim); margin-bottom: 16px; border-left: 3px solid var(--accent); padding-left: 12px; }
+
+  .player-headers { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 28px; }
+  .player-header-card { background: var(--surface); border: 1px solid var(--border); border-radius: 6px; padding: 20px; text-align: center; }
+  .playerA-card { border-top: 3px solid var(--playerA); }
+  .playerB-card { border-top: 3px solid var(--playerB); }
+  .ph-name { font-family: 'Bebas Neue', sans-serif; font-size: 28px; letter-spacing: 2px; margin-bottom: 4px; }
+  .playerA-card .ph-name { color: var(--playerA); }
+  .playerB-card .ph-name { color: var(--playerB); }
+  .ph-sub { font-size: 12px; color: var(--text-dim); }
+
+  .chart-wrap { background: var(--surface); border: 1px solid var(--border); border-radius: 6px; padding: 24px; margin-bottom: 28px; display: flex; align-items: center; justify-content: center; flex-direction: column; }
+  .chart-legend { display: flex; gap: 24px; margin-top: 16px; }
+  .legend-item { display: flex; align-items: center; gap: 8px; font-size: 13px; }
+  .legend-dot { width: 12px; height: 12px; border-radius: 50%; }
+
+  .compare-block { background: var(--surface); border: 1px solid var(--border); border-radius: 6px; padding: 24px; margin-bottom: 20px; }
+  .compare-block-title { font-family: 'Bebas Neue', sans-serif; font-size: 16px; letter-spacing: 2px; color: var(--text-dim); margin-bottom: 16px; }
+
+  .stat-compare-row { display: grid; grid-template-columns: 1fr 200px 1fr; gap: 12px; align-items: center; padding: 8px 0; border-bottom: 1px solid var(--border); }
+  .stat-compare-row:last-child { border-bottom: none; }
+
+  .stat-val-A { text-align: right; font-weight: 700; font-size: 15px; }
+  .stat-val-B { text-align: left; font-weight: 700; font-size: 15px; }
+  .stat-name { text-align: center; font-size: 11px; color: var(--text-dim); letter-spacing: 0.5px; }
+
+  .val-higher { color: var(--green); }
+  .val-lower { color: var(--text-dim); }
+  .val-equal { color: var(--gold); }
+
+  .bar-wrap { display: flex; align-items: center; gap: 4px; }
+  .bar-A { height: 6px; background: var(--playerA); border-radius: 3px; transition: width 0.5s; }
+  .bar-B { height: 6px; background: var(--playerB); border-radius: 3px; transition: width 0.5s; }
+  .bar-center { display: flex; flex-direction: column; gap: 3px; flex: 1; }
+
+  .metrics-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 28px; }
+  .metric-card { background: var(--surface); border: 1px solid var(--border); border-radius: 6px; padding: 20px; }
+  .metric-title { font-size: 12px; color: var(--text-dim); letter-spacing: 1px; text-transform: uppercase; margin-bottom: 12px; }
+  .metric-row { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid var(--border); }
+  .metric-row:last-child { border-bottom: none; }
+  .metric-label { font-size: 13px; }
+  .metric-values { display: flex; gap: 16px; }
+  .metric-val { font-family: 'Bebas Neue', sans-serif; font-size: 20px; }
+  .metric-val-A { color: var(--playerA); }
+  .metric-val-B { color: var(--playerB); }
+
+  .style-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 28px; }
+  .style-card { background: var(--surface); border: 1px solid var(--border); border-radius: 6px; padding: 24px; }
+  .style-card.playerA-card { border-left: 3px solid var(--playerA); }
+  .style-card.playerB-card { border-left: 3px solid var(--playerB); }
+  .style-name { font-family: 'Bebas Neue', sans-serif; font-size: 20px; letter-spacing: 1px; margin-bottom: 6px; }
+  .style-type { font-size: 13px; color: var(--gold); font-weight: 700; margin-bottom: 12px; }
+  .style-desc { font-size: 13px; line-height: 1.8; color: var(--text-dim); }
+  .style-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; }
+  .style-tag { font-size: 11px; padding: 3px 8px; border-radius: 2px; background: var(--surface2); border: 1px solid var(--border); color: var(--text-dim); }
+
+  .toast { position: fixed; bottom: 24px; right: 24px; background: var(--accent); color: white; padding: 12px 20px; border-radius: 4px; font-weight: 700; font-size: 13px; transform: translateY(80px); opacity: 0; transition: all 0.3s; z-index: 999; }
+  .toast.show { transform: translateY(0); opacity: 1; }
+
+  .match-summary-card { background: var(--surface); border: 1px solid var(--border); border-radius: 6px; padding: 24px; margin-bottom: 20px; }
+  .match-summary-vs { font-family: 'Bebas Neue', sans-serif; font-size: 14px; letter-spacing: 2px; color: var(--text-dim); margin-bottom: 8px; }
+  .match-summary-text { font-size: 15px; line-height: 1.9; color: var(--text); }
+  .match-summary-keyword { color: var(--gold); font-weight: 700; }
+
+  .individual-summary-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 20px; }
+  .individual-summary-card { background: var(--surface); border: 1px solid var(--border); border-radius: 6px; padding: 20px; }
+  .individual-summary-card.playerA-card { border-left: 3px solid var(--playerA); }
+  .individual-summary-card.playerB-card { border-left: 3px solid var(--playerB); }
+  .individual-summary-name { font-family: 'Bebas Neue', sans-serif; font-size: 18px; letter-spacing: 1px; margin-bottom: 8px; }
+  .playerA-card .individual-summary-name { color: var(--playerA); }
+  .playerB-card .individual-summary-name { color: var(--playerB); }
+  .individual-summary-text { font-size: 13px; line-height: 1.9; color: var(--text-dim); }
+
+  .cast-script-card { background: var(--surface); border: 1px solid var(--border); border-left: 3px solid var(--gold); border-radius: 6px; padding: 24px; margin-bottom: 20px; position: relative; }
+  .cast-script-label { font-size: 11px; color: var(--gold); letter-spacing: 2px; text-transform: uppercase; margin-bottom: 12px; font-weight: 700; }
+  .cast-script-text { font-size: 14px; line-height: 2; color: var(--text); }
+  .cast-script-text em { color: var(--gold); font-style: normal; font-weight: 700; }
+  .btn-copy { position: absolute; top: 16px; right: 16px; background: transparent; border: 1px solid var(--border); color: var(--text-dim); font-family: 'Noto Sans JP', sans-serif; font-size: 11px; padding: 4px 10px; border-radius: 2px; cursor: pointer; transition: all 0.2s; }
+  .btn-copy:hover { border-color: var(--gold); color: var(--gold); }
+
+  /* PLAYER CARD DOWNLOAD */
+  .card-download-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 28px; }
+  .btn-card-dl { width: 100%; padding: 14px; background: transparent; border: 2px solid var(--accent); border-radius: 4px; color: var(--accent); font-family: 'Bebas Neue', sans-serif; font-size: 18px; letter-spacing: 3px; cursor: pointer; transition: all 0.2s; margin-top: 12px; display: block; }
+  .btn-card-dl:hover { background: var(--accent); color: white; }
+
+  @media (max-width: 768px) {
+    .input-section, .player-headers, .metrics-grid, .style-grid, .card-download-grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">B<span>F</span>TC <span style="font-size:16px;color:var(--text-dim);letter-spacing:1px;">STATS COMPARE</span></div>
+</header>
+
+<div class="container">
+
+  <div class="input-section">
+    <div class="player-input playerA">
+      <div class="player-label">PLAYER A</div>
+      <input type="text" class="name-input" id="nameA" placeholder="選手名A">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;">
+        <select class="name-input" id="rankA" style="margin-bottom:0">
+          <option value="">ランク帯（任意）</option>
+          <option>ROOKIE</option><option>IRON</option><option>BRONZE</option>
+          <option>SILVER</option><option>GOLD</option><option>PLATINUM</option>
+          <option>DIAMOND</option><option>MASTER〜1599</option><option>MASTER〜1699</option>
+          <option>MASTER〜1799</option><option>MASTER〜1899</option><option>MASTER〜2000</option>
+          <option>MASTER2000〜</option><option>LEGEND</option>
+        </select>
+        <select class="name-input" id="opA" style="margin-bottom:0">
+          <option value="">操作タイプ（任意）</option>
+          <option>クラシック</option><option>モダン</option>
+        </select>
+      </div>
+      <input type="text" class="name-input" id="charaA" placeholder="使用キャラクター（任意）">
+      <textarea class="data-textarea" id="dataA" placeholder="例：
+ドライブパリィ 15.27%
+ドライブインパクト 3.70%
+オーバードライブアーツ 23.57%
+パリィドライブラッシュ 6.98%
+キャンセルドライブラッシュ 25.61%
+ドライブリバーサル 0.67%
+ダメージ 24.16%
+（CAPCOMのデータをそのまま貼り付けてください）"></textarea>
+    </div>
+    <div class="player-input playerB">
+      <div class="player-label">PLAYER B</div>
+      <input type="text" class="name-input" id="nameB" placeholder="選手名B">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;">
+        <select class="name-input" id="rankB" style="margin-bottom:0">
+          <option value="">ランク帯（任意）</option>
+          <option>ROOKIE</option><option>IRON</option><option>BRONZE</option>
+          <option>SILVER</option><option>GOLD</option><option>PLATINUM</option>
+          <option>DIAMOND</option><option>MASTER〜1599</option><option>MASTER〜1699</option>
+          <option>MASTER〜1799</option><option>MASTER〜1899</option><option>MASTER〜2000</option>
+          <option>MASTER2000〜</option><option>LEGEND</option>
+        </select>
+        <select class="name-input" id="opB" style="margin-bottom:0">
+          <option value="">操作タイプ（任意）</option>
+          <option>クラシック</option><option>モダン</option>
+        </select>
+      </div>
+      <input type="text" class="name-input" id="charaB" placeholder="使用キャラクター（任意）">
+      <textarea class="data-textarea" id="dataB" placeholder="例：
+ドライブパリィ 15.16%
+ドライブインパクト 0.93%
+（CAPCOMのデータをそのまま貼り付けてください）"></textarea>
+    </div>
+  </div>
+
+  <button class="btn-generate" onclick="generateCompare()">⚔ 比較を生成する</button>
+  <button onclick="clearAll()" style="width:100%;padding:12px;background:transparent;border:1px solid var(--border);border-radius:4px;color:var(--text-dim);font-family:'Noto Sans JP',sans-serif;font-size:13px;cursor:pointer;margin-top:-16px;margin-bottom:32px;transition:all 0.2s;" onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text-dim)'">🗑 入力内容をクリア</button>
+
+  <div class="result-section" id="resultSection">
+
+    <div class="player-headers">
+      <div class="player-header-card playerA-card">
+        <div class="ph-name" id="rNameA">—</div>
+        <div class="ph-sub" id="rSubA"></div>
+      </div>
+      <div class="player-header-card playerB-card">
+        <div class="ph-name" id="rNameB">—</div>
+        <div class="ph-sub" id="rSubB"></div>
+      </div>
+    </div>
+
+    <div class="section-title">レーダーチャート比較</div>
+    <div class="chart-wrap">
+      <canvas id="radarChart" width="500" height="500"></canvas>
+      <div class="chart-legend">
+        <div class="legend-item"><div class="legend-dot" style="background:var(--playerA)"></div><span id="legendA">Player A</span></div>
+        <div class="legend-item"><div class="legend-dot" style="background:var(--playerB)"></div><span id="legendB">Player B</span></div>
+      </div>
+    </div>
+
+    <div class="section-title">ドライブゲージ使用傾向</div>
+    <div class="compare-block" id="driveBlock"></div>
+
+    <div class="section-title">詳細スタッツ比較</div>
+    <div id="detailBlocks"></div>
+
+    <div class="section-title">BFTC独自指標<span style="font-size:13px;font-family:'Noto Sans JP',sans-serif;color:var(--text-dim);letter-spacing:0;margin-left:12px;font-weight:400;">（強さ指標ではなくスタイル指標）</span></div>
+    <div class="metrics-grid" id="metricsGrid"></div>
+
+    <div class="section-title">プレイスタイル総評</div>
+    <div class="style-grid" id="styleGrid"></div>
+
+    <div class="section-title">二つ名</div>
+    <div class="style-grid" id="titleGrid"></div>
+
+    <div class="section-title">マッチアップサマリ</div>
+    <div id="matchSummary"></div>
+
+    <div class="section-title">実況スクリプト</div>
+    <div id="castScript"></div>
+
+    <div class="section-title">X投稿文</div>
+    <div id="xPost"></div>
+
+    <!-- 対戦カード（SNS用画像） -->
+    <div class="section-title">対戦カード（SNS用画像）</div>
+    <div class="card-download-grid">
+      <div>
+        <canvas id="cardCanvasA" width="1280" height="720" style="width:100%;border:1px solid var(--border);border-radius:4px;background:#0c0c10;"></canvas>
+        <button class="btn-card-dl" onclick="downloadCard('A')">⬇ Aのカードをダウンロード</button>
+      </div>
+      <div>
+        <canvas id="cardCanvasB" width="1280" height="720" style="width:100%;border:1px solid var(--border);border-radius:4px;background:#0c0c10;"></canvas>
+        <button class="btn-card-dl" onclick="downloadCard('B')">⬇ Bのカードをダウンロード</button>
+      </div>
+    </div>
+
+    <div class="section-title">OBS用マッチカードURL</div>
+    <div id="matchcardUrl"></div>
+
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+  const GAS_URL = 'https://script.google.com/macros/s/AKfycbxPhj1Dhtm-p9gXXd1hJlnO526i7488aK78aNNKiK__d6329QhH2U4fPQFwaaMWED2I/exec';
+
+function clearAll() {
+  ['nameA','nameB','charaA','charaB'].forEach(id => document.getElementById(id).value = '');
+  ['rankA','rankB','opA','opB'].forEach(id => document.getElementById(id).value = '');
+  ['dataA','dataB'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('resultSection').classList.remove('visible');
+  usedTitles.clear();
+  showToast('✓ クリアしました');
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2800);
+}
+
+function parseFloat2(str) {
+  const m = str.replace(/,/g,'').match(/[\d.]+/);
+  return m ? parseFloat(m[0]) : 0;
+}
+
+function parseData(text) {
+  const d = {};
+  const lines = text.split('\n').map(l => l.trim()).filter(l => l);
+  const merged = [];
+  for(let i = 0; i < lines.length; i++) {
+    const cur = lines[i];
+    const next = lines[i+1] || '';
+    if(/^[\d.,]+(%|回|秒|PT)?$/.test(cur)) continue;
+    if(next && /^[\d.,]+(%|回|秒|PT)?$/.test(next)) {
+      merged.push(cur + ' ' + next);
+    } else {
+      merged.push(cur);
+    }
+  }
+  const fullText = lines.join('\n') + '\n' + merged.join('\n');
+  const patterns = [
+    { key: 'dp',      regex: /ドライブパリィ\s*([\d.]+)%/ },
+    { key: 'di',      regex: /ドライブインパクト\s*([\d.]+)%/ },
+    { key: 'od',      regex: /オーバードライブアーツ\s*([\d.]+)%/ },
+    { key: 'pdr',     regex: /パリィドライブラッシュ\s*([\d.]+)%/ },
+    { key: 'cdr',     regex: /キャンセルドライブラッシュ\s*([\d.]+)%/ },
+    { key: 'dr',      regex: /ドライブリバーサル\s*([\d.]+)%/ },
+    { key: 'dmg',     regex: /ダメージ\s*([\d.]+)%/ },
+    { key: 'drUse',   regex: /使用回数\s*([\d.]+)回/ },
+    { key: 'dpSuc',   regex: /成功回数\s*([\d.]+)回/ },
+    { key: 'dpThrow', regex: /相手のドライブパリィを投げた\s*([\d.]+)回/ },
+    { key: 'dpThrown',regex: /自分のドライブパリィを投げられた\s*([\d.]+)回/ },
+    { key: 'justParry',regex: /ジャストパリィ回数\s*([\d.]+)回/ },
+    { key: 'diPC',    regex: /パニッシュカウンターを決めた回数\s*([\d.]+)回/ },
+    { key: 'diVsdi',  regex: /相手のドライブインパクトに決めた回数\s*([\d.]+)回/ },
+    { key: 'diRecvPC',regex: /パニッシュカウンターを受けた回数\s*([\d.]+)回/ },
+    { key: 'diReturn',regex: /相手にドライブインパクトで返された回数\s*([\d.]+)回/ },
+    { key: 'sa1',     regex: /Lv1\s*([\d.]+)%/ },
+    { key: 'sa2',     regex: /Lv2\s*([\d.]+)%/ },
+    { key: 'sa3',     regex: /Lv3\s*([\d.]+)%/ },
+    { key: 'ca',      regex: /CA\s*([\d.]+)%/ },
+    { key: 'throwEsc',regex: /投げ抜け回数\s*([\d.]+)回/ },
+    { key: 'wallAtk', regex: /相手を追い詰めている時間\s*([\d.]+)秒/ },
+    { key: 'wallDef', regex: /相手に追い詰められている時間\s*([\d.]+)秒/ },
+    { key: 'rankMatch',regex: /ランクマッチプレイ回数\s*([\d,]+)回/ },
+    { key: 'casual',   regex: /カジュアルマッチプレイ回数\s*([\d,]+)回/ },
+    { key: 'room',     regex: /ルームマッチプレイ回数\s*([\d,]+)回/ },
+    { key: 'hub',      regex: /バトルハブマッチプレイ回数\s*([\d,]+)回/ },
+    { key: 'pts',      regex: /累計プレイポイント\s*([\d,]+)PT/ },
+    { key: 'challenge',regex: /チャレンジクリア回数\s*([\d,]+)回/ },
+  ];
+  patterns.forEach(p => {
+    const m = fullText.match(p.regex);
+    if(m) d[p.key] = parseFloat(m[1].replace(/,/g,''));
+  });
+  const diHitMatches = fullText.match(/決めた回数\s*([\d.]+)回/g);
+  if(diHitMatches && diHitMatches.length >= 1) {
+    d.diHit     = parseFloat(diHitMatches[0].match(/([\d.]+)/)[0]);
+    d.throwGive = diHitMatches.length >= 2 ? parseFloat(diHitMatches[diHitMatches.length-1].match(/([\d.]+)/)[0]) : 0;
+  }
+  const recvMatches = fullText.match(/受けた回数\s*([\d.]+)回/g);
+  if(recvMatches && recvMatches.length >= 1) {
+    d.diRecv    = parseFloat(recvMatches[0].match(/([\d.]+)/)[0]);
+    d.throwRecv = recvMatches.length >= 2 ? parseFloat(recvMatches[recvMatches.length-1].match(/([\d.]+)/)[0]) : 0;
+  }
+  const stunGiveM = fullText.match(/スタンさせた回数\s*([\d.]+)回/);
+  if(stunGiveM) d.stunGive = parseFloat(stunGiveM[1]);
+  const stunRecvM = fullText.match(/スタンさせられた回数\s*([\d.]+)回/);
+  if(stunRecvM) d.stunRecv = parseFloat(stunRecvM[1]);
+  return d;
+}
+
+function calcMetrics(d) {
+  const attackIdx = Math.min(100, Math.round(((d.cdr||0) + (d.od||0) + (d.pdr||0)) * 0.95));
+  const defenseIdx = Math.min(100, Math.round(((d.dr||0) + (d.dmg||0)) * 1.8));
+  const diIdx = d.di < 2 ? '低' : d.di < 4 ? '中' : '高';
+  const wallCtrl = d.wallAtk && d.wallDef ? Math.round((d.wallAtk / (d.wallAtk + d.wallDef)) * 100) : 0;
+  const throwRatio = d.throwGive && d.throwRecv ? Math.round((d.throwGive / (d.throwGive + d.throwRecv)) * 100) : 0;
+  const saHigh = Math.max(d.sa2||0, d.sa3||0);
+  return { attackIdx, defenseIdx, diIdx, wallCtrl, throwRatio, saHigh };
+}
+
+function getPlayStyle(d, m, name) {
+  const tags = [];
+  const styles = [];
+  const wallCtrl = m.wallCtrl || 0;
+  const throwRatio = m.throwRatio || 0;
+  if(d.cdr >= 40 && d.od >= 25) {
+    tags.push('超攻撃特化型'); styles.push('キャンセルドライブラッシュとOD技を軸に、ゲージを惜しみなく攻撃に注ぎ込む超攻撃特化スタイル');
+  } else if(d.cdr >= 35 && wallCtrl >= 55) {
+    tags.push('壁詰め殲滅型'); styles.push('キャンセルドライブラッシュで一気に距離を詰め、壁際に追い込んでから崩す前進コーナー攻略型');
+  } else if(d.cdr >= 35 && d.throwGive >= 2.5) {
+    tags.push('接近投げ崩し型'); styles.push('キャンセルドライブラッシュで間合いを詰めて投げを絡める、起き攻め・投げ崩しが得意なスタイル');
+  } else if(d.cdr >= 30 && d.pdr >= 8) {
+    tags.push('変則ドライブラッシュ型'); styles.push('キャンセルドライブラッシュとパリィドライブラッシュを使い分ける高度なドライブゲージ活用型');
+  } else if(d.od >= 30 && d.sa3 >= 30) {
+    tags.push('大技連打型'); styles.push('OD技と高レベルSAを軸に、要所で大ダメージを狙う決め手重視の大技連打スタイル');
+  } else if(d.od >= 28) {
+    tags.push('OD多用型'); styles.push('オーバードライブ技の使用率が突出して高く、ゲージをダメージに直結させる覚醒主義スタイル');
+  } else if(d.pdr >= 12 && d.dpSuc >= 2) {
+    tags.push('パリィ攻め型'); styles.push('パリィドライブラッシュとパリィ成功を攻撃の起点にする、読み合い重視の攻撃的カウンタースタイル');
+  } else if(d.dpSuc >= 3 && d.justParry >= 1) {
+    tags.push('神域パリィ型'); styles.push('通常パリィ・ジャストパリィの精度が異常に高い、相手の攻撃を見切ることを軸にした玄人スタイル');
+  } else if(d.dpSuc >= 2.5) {
+    tags.push('堅守反撃型'); styles.push('パリィ精度が高く、相手の攻撃を受け流してから反撃する守備的カウンタースタイル');
+  } else if(d.throwGive >= 3.5 && wallCtrl >= 55) {
+    tags.push('投げコーナー支配型'); styles.push('投げを多用して相手をコーナーに追い込み、壁際の攻防で圧倒するグラップラースタイル');
+  } else if(d.throwGive >= 3) {
+    tags.push('投げ崩し特化型'); styles.push('投げ命中率が際立って高く、打撃と投げの2択を武器に崩しを得意とするグラップラースタイル');
+  } else if(wallCtrl >= 65) {
+    tags.push('壁際絶対王者型'); styles.push('壁際支配率が圧倒的に高く、一度コーナーに追い込んだら逃さない。コーナーこそが本領のスタイル');
+  } else if(wallCtrl >= 55) {
+    tags.push('コーナー主導型'); styles.push('壁際での攻防を得意とし、相手をコーナーに追い込んでからの崩しで試合を組み立てるスタイル');
+  } else if(d.sa3 >= 45) {
+    tags.push('SA3全振り型'); styles.push('SAゲージのLv3集中率が極めて高い。必殺技一発に試合の流れを賭ける豪快な大技主義スタイル');
+  } else if(d.sa2 >= 50) {
+    tags.push('SA2連打型'); styles.push('SAゲージをLv2で使い続けるコスト効率重視スタイル。隙を見逃さず素早くSAを叩き込む');
+  } else if(d.dr >= 2) {
+    tags.push('リバーサル依存型'); styles.push('ドライブリバーサルの使用率が高い。守りに入った場面での切り返しを得意とする防御反撃スタイル');
+  } else if(m.defenseIdx >= 60 && m.attackIdx <= 40) {
+    tags.push('受け師型'); styles.push('ゲージ消耗が多く守備に回る展開が多い。耐えながら相手のミスを誘うじっくり型スタイル');
+  } else if(m.attackIdx >= 60) {
+    tags.push('積極攻撃型'); styles.push('ゲージを攻撃リソースとして効率よく使う積極攻撃スタイル。前に出て主導権を握ることを好む');
+  } else if(m.attackIdx >= 45 && m.defenseIdx <= 35) {
+    tags.push('効率攻撃型'); styles.push('ゲージ消耗が少なく攻撃に使えるゲージを常に確保しているタイプ。無駄のない立ち回りが特徴');
+  } else if(d.pdr >= 8) {
+    tags.push('パリィドライブラッシュ型'); styles.push('パリィドライブラッシュを積極的に使う読み合い重視スタイル。相手の行動を読んで攻めに転じる');
+  } else if(d.rankMatch >= 40000) {
+    tags.push('歴戦の猛者型'); styles.push('圧倒的な対戦経験値に裏打ちされた安定感が武器。試合の流れを読む能力に長けたベテランスタイル');
+  } else {
+    tags.push('総合バランス型'); styles.push('特定の武器に偏らず、状況に応じてゲージの使い方を柔軟に変えるオールラウンドなバランス型');
+  }
+  if(d.justParry >= 1 && !tags.includes('神域パリィ型')) { tags.push('ジャストパリィ使い'); }
+  if(d.cdr >= 30 && !tags[0].includes('ドライブラッシュ')) { tags.push('ドライブラッシュ活用'); }
+  if(d.dmg >= 28) { tags.push('ゲージ消耗注意'); }
+  if(d.rankMatch >= 30000 && !tags.includes('歴戦の猛者型')) { tags.push('ベテラン'); }
+  const type = tags[0];
+  const desc = styles[0] + '。';
+  return { type, desc, tags };
+}
+
+function drawRadar(dA, dB, nameA, nameB) {
+  const canvas = document.getElementById('radarChart');
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width, H = canvas.height;
+  const cx = W/2, cy = H/2, r = 180;
+  ctx.clearRect(0, 0, W, H);
+  const axes = [
+    { label: '攻撃圧力',  valA: Math.min(100, ((dA.cdr||0)+(dA.od||0)+(dA.pdr||0))*0.95), valB: Math.min(100, ((dB.cdr||0)+(dB.od||0)+(dB.pdr||0))*0.95) },
+    { label: '守備消耗', valA: Math.min(100, ((dA.dr||0)+(dA.dmg||0))*1.8), valB: Math.min(100, ((dB.dr||0)+(dB.dmg||0))*1.8) },
+    { label: '壁際支配', valA: dA.wallAtk&&dA.wallDef ? (dA.wallAtk/(dA.wallAtk+dA.wallDef))*100 : 50, valB: dB.wallAtk&&dB.wallDef ? (dB.wallAtk/(dB.wallAtk+dB.wallDef))*100 : 50 },
+    { label: '投げ攻め',  valA: dA.throwGive&&dA.throwRecv ? (dA.throwGive/(dA.throwGive+dA.throwRecv))*100 : 50, valB: dB.throwGive&&dB.throwRecv ? (dB.throwGive/(dB.throwGive+dB.throwRecv))*100 : 50 },
+    { label: 'パリィ力', valA: Math.min(100, (dA.dpSuc||0)*20+(dA.justParry||0)*15), valB: Math.min(100, (dB.dpSuc||0)*20+(dB.justParry||0)*15) },
+    { label: 'SA活用',   valA: Math.max(dA.sa2||0, dA.sa3||0), valB: Math.max(dB.sa2||0, dB.sa3||0) },
+  ];
+  const n = axes.length;
+  const angleStep = (Math.PI * 2) / n;
+  for(let level = 1; level <= 5; level++) {
+    const rr = r * level / 5;
+    ctx.beginPath();
+    for(let i = 0; i < n; i++) {
+      const angle = -Math.PI/2 + angleStep * i;
+      const x = cx + rr * Math.cos(angle);
+      const y = cy + rr * Math.sin(angle);
+      i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+    }
+    ctx.closePath();
+    ctx.strokeStyle = '#2a2a3a';
+    ctx.lineWidth = 1;
+    ctx.stroke();
+  }
+  for(let i = 0; i < n; i++) {
+    const angle = -Math.PI/2 + angleStep * i;
+    ctx.beginPath();
+    ctx.moveTo(cx, cy);
+    ctx.lineTo(cx + r * Math.cos(angle), cy + r * Math.sin(angle));
+    ctx.strokeStyle = '#2a2a3a';
+    ctx.lineWidth = 1;
+    ctx.stroke();
+    const lx = cx + (r + 28) * Math.cos(angle);
+    const ly = cy + (r + 28) * Math.sin(angle);
+    ctx.fillStyle = '#7a7a9a';
+    ctx.font = 'bold 12px Noto Sans JP';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(axes[i].label, lx, ly);
+  }
+  [
+    { vals: axes.map(a => a.valA), color: '#e8003d', alpha: 0.3 },
+    { vals: axes.map(a => a.valB), color: '#0099ff', alpha: 0.3 },
+  ].forEach(({ vals, color, alpha }) => {
+    ctx.beginPath();
+    vals.forEach((v, i) => {
+      const angle = -Math.PI/2 + angleStep * i;
+      const rr = r * Math.min(v, 100) / 100;
+      const x = cx + rr * Math.cos(angle);
+      const y = cy + rr * Math.sin(angle);
+      i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+    });
+    ctx.closePath();
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 2.5;
+    ctx.stroke();
+    ctx.fillStyle = color + Math.round(alpha * 255).toString(16).padStart(2,'0');
+    ctx.fill();
+  });
+}
+
+function makeCompareRow(label, valA, valB, unitA='', unitB='') {
+  const a = parseFloat(valA) || 0;
+  const b = parseFloat(valB) || 0;
+  const max = Math.max(a, b, 0.001);
+  const wA = Math.round((a / max) * 100);
+  const wB = Math.round((b / max) * 100);
+  const clsA = a > b ? 'val-higher' : a < b ? 'val-lower' : 'val-equal';
+  const clsB = b > a ? 'val-higher' : b < a ? 'val-lower' : 'val-equal';
+  return `
+    <div class="stat-compare-row">
+      <div style="text-align:right">
+        <div class="${clsA}" style="font-weight:700;font-size:15px">${valA}${unitA}</div>
+        <div class="bar-wrap" style="justify-content:flex-end">
+          <div class="bar-A" style="width:${wA}px;max-width:120px"></div>
+        </div>
+      </div>
+      <div class="stat-name">${label}</div>
+      <div>
+        <div class="${clsB}" style="font-weight:700;font-size:15px">${valB}${unitB}</div>
+        <div class="bar-wrap">
+          <div class="bar-B" style="width:${wB}px;max-width:120px"></div>
+        </div>
+      </div>
+    </div>`;
+}
+
+function generateCompare() {
+  const nameA = document.getElementById('nameA').value.trim() || 'Player A';
+  const nameB = document.getElementById('nameB').value.trim() || 'Player B';
+  const rankA = document.getElementById('rankA').value;
+  const rankB = document.getElementById('rankB').value;
+  const charaA = document.getElementById('charaA').value.trim();
+  const charaB = document.getElementById('charaB').value.trim();
+  const opA = document.getElementById('opA').value;
+  const opB = document.getElementById('opB').value;
+  const textA = document.getElementById('dataA').value;
+  const textB = document.getElementById('dataB').value;
+  if(!textA || !textB) { showToast('⚠ 両選手のデータを入力してください'); return; }
+  const dA = parseData(textA);
+  const dB = parseData(textB);
+  const mA = calcMetrics(dA);
+  const mB = calcMetrics(dB);
+  const sA = getPlayStyle(dA, mA, nameA);
+  const sB = getPlayStyle(dB, mB, nameB);
+
+  document.getElementById('rNameA').textContent = nameA;
+  document.getElementById('rNameB').textContent = nameB;
+  const subA = [rankA, charaA, opA].filter(Boolean).join(' ／ ');
+  const subB = [rankB, charaB, opB].filter(Boolean).join(' ／ ');
+  document.getElementById('rSubA').textContent = (subA ? subA + '　' : '') + `累計${(dA.pts||0).toLocaleString()}PT / ランクマッチ${(dA.rankMatch||0).toLocaleString()}回`;
+  document.getElementById('rSubB').textContent = (subB ? subB + '　' : '') + `累計${(dB.pts||0).toLocaleString()}PT / ランクマッチ${(dB.rankMatch||0).toLocaleString()}回`;
+  document.getElementById('legendA').textContent = nameA;
+  document.getElementById('legendB').textContent = nameB;
+
+  drawRadar(dA, dB, nameA, nameB);
+
+  document.getElementById('driveBlock').innerHTML = `
+    <div class="compare-block-title">ドライブゲージ使用傾向（%）</div>
+    ${makeCompareRow('キャンセルドライブラッシュ', dA.cdr||0, dB.cdr||0, '%', '%')}
+    ${makeCompareRow('ダメージ消費', dA.dmg||0, dB.dmg||0, '%', '%')}
+    ${makeCompareRow('OD技', dA.od||0, dB.od||0, '%', '%')}
+    ${makeCompareRow('ドライブパリィ', dA.dp||0, dB.dp||0, '%', '%')}
+    ${makeCompareRow('パリィドライブラッシュ', dA.pdr||0, dB.pdr||0, '%', '%')}
+    ${makeCompareRow('ドライブインパクト', dA.di||0, dB.di||0, '%', '%')}
+    ${makeCompareRow('ドライブリバーサル', dA.dr||0, dB.dr||0, '%', '%')}
+  `;
+
+  document.getElementById('detailBlocks').innerHTML = `
+    <div class="compare-block" style="margin-bottom:16px">
+      <div class="compare-block-title">ドライブパリィ</div>
+      ${makeCompareRow('成功回数', dA.dpSuc||0, dB.dpSuc||0, '回', '回')}
+      ${makeCompareRow('ジャストパリィ', dA.justParry||0, dB.justParry||0, '回', '回')}
+    </div>
+    <div class="compare-block" style="margin-bottom:16px">
+      <div class="compare-block-title">ドライブインパクト</div>
+      ${makeCompareRow('DI命中', dA.diHit||0, dB.diHit||0, '回', '回')}
+      ${makeCompareRow('DI被弾', dA.diRecv||0, dB.diRecv||0, '回', '回')}
+    </div>
+    <div class="compare-block" style="margin-bottom:16px">
+      <div class="compare-block-title">SAゲージ使用割合（%）</div>
+      ${makeCompareRow('SA Lv1', dA.sa1||0, dB.sa1||0, '%', '%')}
+      ${makeCompareRow('SA Lv2', dA.sa2||0, dB.sa2||0, '%', '%')}
+      ${makeCompareRow('SA Lv3', dA.sa3||0, dB.sa3||0, '%', '%')}
+      ${makeCompareRow('CA', dA.ca||0, dB.ca||0, '%', '%')}
+    </div>
+    <div class="compare-block" style="margin-bottom:16px">
+      <div class="compare-block-title">投げ</div>
+      ${makeCompareRow('投げ命中', dA.throwGive||0, dB.throwGive||0, '回', '回')}
+      ${makeCompareRow('投げ被弾', dA.throwRecv||0, dB.throwRecv||0, '回', '回')}
+      ${makeCompareRow('投げ抜け', dA.throwEsc||0, dB.throwEsc||0, '回', '回')}
+    </div>
+    <div class="compare-block" style="margin-bottom:16px">
+      <div class="compare-block-title">壁際</div>
+      ${makeCompareRow('追い詰め時間', dA.wallAtk||0, dB.wallAtk||0, '秒', '秒')}
+      ${makeCompareRow('追い詰められ時間', dA.wallDef||0, dB.wallDef||0, '秒', '秒')}
+    </div>
+    <div class="compare-block">
+      <div class="compare-block-title">プレイ実績</div>
+      ${makeCompareRow('ランクマッチ', (dA.rankMatch||0).toLocaleString(), (dB.rankMatch||0).toLocaleString(), '回', '回')}
+      ${makeCompareRow('ルームマッチ', (dA.room||0).toLocaleString(), (dB.room||0).toLocaleString(), '回', '回')}
+      ${makeCompareRow('累計PT', (dA.pts||0).toLocaleString(), (dB.pts||0).toLocaleString(), 'PT', 'PT')}
+      ${makeCompareRow('チャレンジクリア', (dA.challenge||0).toLocaleString(), (dB.challenge||0).toLocaleString(), '回', '回')}
+    </div>
+  `;
+
+  const wallCtrlA = dA.wallAtk&&dA.wallDef ? Math.round((dA.wallAtk/(dA.wallAtk+dA.wallDef))*100) : 0;
+  const wallCtrlB = dB.wallAtk&&dB.wallDef ? Math.round((dB.wallAtk/(dB.wallAtk+dB.wallDef))*100) : 0;
+  const throwRatioA = dA.throwGive&&dA.throwRecv ? Math.round((dA.throwGive/(dA.throwGive+dA.throwRecv))*100) : 0;
+  const throwRatioB = dB.throwGive&&dB.throwRecv ? Math.round((dB.throwGive/(dB.throwGive+dB.throwRecv))*100) : 0;
+
+  document.getElementById('metricsGrid').innerHTML = `
+    <div class="metric-card">
+      <div class="metric-title">🔴 攻撃圧力指数（/100）</div>
+      <div class="metric-row"><span class="metric-label">CDR＋OD＋パリィドライブラッシュの合計</span>
+        <div class="metric-values">
+          <span class="metric-val metric-val-A">${mA.attackIdx}</span>
+          <span class="metric-val metric-val-B">${mB.attackIdx}</span>
+        </div>
+      </div>
+      <div class="metric-row"><span class="metric-label" style="font-size:11px;color:var(--text-dim)">高いほどゲージを攻撃に集中させている</span></div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-title">🔵 守備消耗度（/100）</div>
+      <div class="metric-row"><span class="metric-label">パリィ＋リバーサル＋ダメージ消費</span>
+        <div class="metric-values">
+          <span class="metric-val metric-val-A">${mA.defenseIdx}</span>
+          <span class="metric-val metric-val-B">${mB.defenseIdx}</span>
+        </div>
+      </div>
+      <div class="metric-row"><span class="metric-label" style="font-size:11px;color:var(--text-dim)">リバーサル＋ダメージ消費から算出。高いほどゲージを削られている</span></div>
+      <div class="metric-row"><span class="metric-label" style="font-size:11px;color:var(--text-dim)">※ PC被弾　A:${dA.diRecvPC||0}回 B:${dB.diRecvPC||0}回（参考値・算出外）</span></div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-title">🟡 壁際支配率（%）</div>
+      <div class="metric-row"><span class="metric-label">追い詰め時間÷総壁際時間</span>
+        <div class="metric-values">
+          <span class="metric-val metric-val-A">${wallCtrlA}%</span>
+          <span class="metric-val metric-val-B">${wallCtrlB}%</span>
+        </div>
+      </div>
+      <div class="metric-row"><span class="metric-label" style="font-size:11px;color:var(--text-dim)">高いほどコーナーで有利</span></div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-title">⚪ 投げ攻勢率（%）</div>
+      <div class="metric-row"><span class="metric-label">投げ命中÷（命中+被弾）</span>
+        <div class="metric-values">
+          <span class="metric-val metric-val-A">${throwRatioA}%</span>
+          <span class="metric-val metric-val-B">${throwRatioB}%</span>
+        </div>
+      </div>
+      <div class="metric-row"><span class="metric-label" style="font-size:11px;color:var(--text-dim)">高いほど投げで崩せている</span></div>
+    </div>
+  `;
+
+  const titlesA = generateTitle(nameA, dA, mA, sA, wallCtrlA, throwRatioA);
+  const titlesB = generateTitle(nameB, dB, mB, sB, wallCtrlB, throwRatioB);
+
+  document.getElementById('styleGrid').innerHTML = `
+    <div class="style-card playerA-card">
+      <div class="style-name">${nameA}</div>
+      <div class="style-type">${sA.type}</div>
+      <div class="style-desc">${sA.desc}</div>
+      <div class="style-tags">${sA.tags.map(t=>`<span class="style-tag">${t}</span>`).join('')}</div>
+      <div style="margin-top:14px;padding-top:12px;border-top:1px solid var(--border);font-size:12px;color:var(--text-dim);line-height:1.8;">${generateStyleReason(dA, mA, sA, wallCtrlA, throwRatioA)}</div>
+    </div>
+    <div class="style-card playerB-card">
+      <div class="style-name">${nameB}</div>
+      <div class="style-type">${sB.type}</div>
+      <div class="style-desc">${sB.desc}</div>
+      <div class="style-tags">${sB.tags.map(t=>`<span class="style-tag">${t}</span>`).join('')}</div>
+      <div style="margin-top:14px;padding-top:12px;border-top:1px solid var(--border);font-size:12px;color:var(--text-dim);line-height:1.8;">${generateStyleReason(dB, mB, sB, wallCtrlB, throwRatioB)}</div>
+    </div>
+  `;
+
+  const [tA1,tA2,tA3,tA1Cat,tA2Cat,tA3Cat] = titlesA;
+  const [tB1,tB2,tB3,tB1Cat,tB2Cat,tB3Cat] = titlesB;
+
+  window._titleData = {
+    nameA, nameB, charaA, charaB, rankA, rankB, opA, opB,
+    dA, dB, mA, mB, sA, sB,
+    wallCtrlA, wallCtrlB, throwRatioA, throwRatioB,
+    titlesA: [tA1,tA2,tA3], titlesB: [tB1,tB2,tB3],
+    catsA: [tA1Cat,tA2Cat,tA3Cat], catsB: [tB1Cat,tB2Cat,tB3Cat],
+    selectedA: 0, selectedB: 0
+  };
+
+  document.getElementById('titleGrid').innerHTML = `
+    <div class="style-card playerA-card">
+      <div class="style-name">${nameA}</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;">
+        ${[tA1,tA2,tA3].map((t,i) => `
+          <button id="titleBtnA${i}" onclick="selectTitle('A',${i})"
+            style="background:${i===0?'var(--accent)':'var(--surface2)'};border:1px solid ${i===0?'var(--accent)':'var(--border)'};color:${i===0?'white':'var(--text-dim)'};padding:6px 12px;border-radius:3px;cursor:pointer;font-family:'Noto Sans JP',sans-serif;font-size:12px;transition:all 0.2s;">
+            ${'①②③'[i]} 採用
+          </button>
+        `).join('')}
+      </div>
+      <div class="style-type" id="selectedTitleA">『${tA1}』</div>
+      <div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border);">
+        <div style="font-size:10px;color:var(--gold);letter-spacing:1px;font-weight:700;margin-bottom:8px;">この二つ名の根拠</div>
+        <div style="font-size:12px;color:var(--text-dim);line-height:1.9;" id="reasonA">${generateTitleReason(dA, mA, sA, wallCtrlA, throwRatioA, tA1, tA1Cat)}</div>
+      </div>
+      ${tA2 ? `<div style="margin-top:16px;padding-top:12px;border-top:1px solid var(--border);"><div style="font-size:13px;font-weight:700;color:var(--text-dim);margin-bottom:8px;">候補② 『${tA2}』</div><div style="font-size:12px;color:var(--text-dim);line-height:1.9;">${generateTitleReason(dA, mA, sA, wallCtrlA, throwRatioA, tA2, tA2Cat)}</div></div>` : ''}
+      ${tA3 ? `<div style="margin-top:16px;padding-top:12px;border-top:1px solid var(--border);"><div style="font-size:13px;font-weight:700;color:var(--text-dim);margin-bottom:8px;">候補③ 『${tA3}』</div><div style="font-size:12px;color:var(--text-dim);line-height:1.9;">${generateTitleReason(dA, mA, sA, wallCtrlA, throwRatioA, tA3, tA3Cat)}</div></div>` : ''}
+    </div>
+    <div class="style-card playerB-card">
+      <div class="style-name">${nameB}</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;">
+        ${[tB1,tB2,tB3].map((t,i) => `
+          <button id="titleBtnB${i}" onclick="selectTitle('B',${i})"
+            style="background:${i===0?'var(--accent)':'var(--surface2)'};border:1px solid ${i===0?'var(--accent)':'var(--border)'};color:${i===0?'white':'var(--text-dim)'};padding:6px 12px;border-radius:3px;cursor:pointer;font-family:'Noto Sans JP',sans-serif;font-size:12px;transition:all 0.2s;">
+            ${'①②③'[i]} 採用
+          </button>
+        `).join('')}
+      </div>
+      <div class="style-type" id="selectedTitleB">『${tB1}』</div>
+      <div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border);">
+        <div style="font-size:10px;color:var(--gold);letter-spacing:1px;font-weight:700;margin-bottom:8px;">この二つ名の根拠</div>
+        <div style="font-size:12px;color:var(--text-dim);line-height:1.9;" id="reasonB">${generateTitleReason(dB, mB, sB, wallCtrlB, throwRatioB, tB1, tB1Cat)}</div>
+      </div>
+      ${tB2 ? `<div style="margin-top:16px;padding-top:12px;border-top:1px solid var(--border);"><div style="font-size:13px;font-weight:700;color:var(--text-dim);margin-bottom:8px;">候補② 『${tB2}』</div><div style="font-size:12px;color:var(--text-dim);line-height:1.9;">${generateTitleReason(dB, mB, sB, wallCtrlB, throwRatioB, tB2, tB2Cat)}</div></div>` : ''}
+      ${tB3 ? `<div style="margin-top:16px;padding-top:12px;border-top:1px solid var(--border);"><div style="font-size:13px;font-weight:700;color:var(--text-dim);margin-bottom:8px;">候補③ 『${tB3}』</div><div style="font-size:12px;color:var(--text-dim);line-height:1.9;">${generateTitleReason(dB, mB, sB, wallCtrlB, throwRatioB, tB3, tB3Cat)}</div></div>` : ''}
+    </div>
+  `;
+
+  const summaryA = generateIndividualSummary(nameA, dA, mA, sA, wallCtrlA, throwRatioA);
+  const summaryB = generateIndividualSummary(nameB, dB, mB, sB, wallCtrlB, throwRatioB);
+  const matchSummaryText = generateMatchSummary(nameA, nameB, dA, dB, mA, mB, sA, sB, wallCtrlA, wallCtrlB);
+
+  document.getElementById('matchSummary').innerHTML = `
+    <div class="match-summary-card">
+      <div class="match-summary-vs">⚔ MATCHUP ANALYSIS</div>
+      <div class="match-summary-text">${matchSummaryText}</div>
+    </div>
+    <div class="individual-summary-grid">
+      <div class="individual-summary-card playerA-card">
+        <div class="individual-summary-name">${nameA}</div>
+        <div class="individual-summary-text">${summaryA}</div>
+      </div>
+      <div class="individual-summary-card playerB-card">
+        <div class="individual-summary-name">${nameB}</div>
+        <div class="individual-summary-text">${summaryB}</div>
+      </div>
+    </div>
+  `;
+
+  const castText = generateCastScript(nameA, nameB, dA, dB, mA, mB, sA, sB, wallCtrlA, wallCtrlB, throwRatioA, throwRatioB, rankA, rankB, charaA, charaB, opA, opB, titlesA, titlesB);
+  document.getElementById('castScript').innerHTML = `
+    <div class="cast-script-card">
+      <div class="cast-script-label">🎙 対戦前 実況スクリプト</div>
+      <button class="btn-copy" onclick="copyScript()">コピー</button>
+      <div class="cast-script-text" id="castScriptText">${castText}</div>
+    </div>
+  `;
+
+  window._xData = { nameA, nameB, charaA, charaB, dA, dB, mA, mB,
+    wallCtrlA, wallCtrlB, throwRatioA, throwRatioB,
+    titlesA: [tA1,tA2,tA3], titlesB: [tB1,tB2,tB3],
+    catsA: [tA1Cat,tA2Cat,tA3Cat], catsB: [tB1Cat,tB2Cat,tB3Cat],
+    sA, sB, selectedA: 0, selectedB: 0 };
+
+  document.getElementById('xPost').innerHTML = `
+    <div class="cast-script-card">
+      <div class="cast-script-label">🐦 X投稿文<span style="font-size:11px;color:var(--text-dim);margin-left:12px;font-family:'Noto Sans JP',sans-serif;font-weight:400;">※二つ名セクションで選択した内容が反映されます</span></div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+        <span class="cast-script-label" id="xCharCount"></span>
+        <button class="btn-copy" onclick="copyXPost()" style="position:static;">コピー</button>
+      </div>
+      <div id="xPostText" style="font-size:14px;line-height:2;color:var(--text);white-space:pre-wrap;"></div>
+    </div>
+  `;
+  updateXPost();
+
+  document.getElementById('resultSection').classList.add('visible');
+  document.getElementById('resultSection').scrollIntoView({ behavior: 'smooth' });
+  updateAllOutputs();
+
+  const timestamp = new Date().toLocaleString('ja-JP');
+  [
+    { name: nameA, rank: rankA, chara: charaA, op: opA, d: dA, m: mA, wallCtrl: wallCtrlA, throwRatio: throwRatioA, title1: titlesA[0]||'', title2: titlesA[1]||'' },
+    { name: nameB, rank: rankB, chara: charaB, op: opB, d: dB, m: mB, wallCtrl: wallCtrlB, throwRatio: throwRatioB, title1: titlesB[0]||'', title2: titlesB[1]||'' }
+  ].forEach(p => {
+    const params = new URLSearchParams();
+    params.append('formType','stats'); params.append('timestamp',timestamp);
+    params.append('name',p.name); params.append('rank',p.rank);
+    params.append('chara',p.chara); params.append('op',p.op);
+    params.append('title1',p.title1); params.append('title2',p.title2);
+    params.append('cdr',p.d.cdr||0); params.append('od',p.d.od||0);
+    params.append('pdr',p.d.pdr||0); params.append('dp',p.d.dp||0);
+    params.append('dr',p.d.dr||0); params.append('dmg',p.d.dmg||0);
+    params.append('di',p.d.di||0); params.append('dpSuc',p.d.dpSuc||0);
+    params.append('justParry',p.d.justParry||0); params.append('throwGive',p.d.throwGive||0);
+    params.append('throwRecv',p.d.throwRecv||0); params.append('throwEsc',p.d.throwEsc||0);
+    params.append('wallAtk',p.d.wallAtk||0); params.append('wallDef',p.d.wallDef||0);
+    params.append('sa1',p.d.sa1||0); params.append('sa2',p.d.sa2||0);
+    params.append('sa3',p.d.sa3||0); params.append('ca',p.d.ca||0);
+    params.append('rankMatch',p.d.rankMatch||0); params.append('pts',p.d.pts||0);
+    params.append('attackIdx',p.m.attackIdx||0); params.append('defenseIdx',p.m.defenseIdx||0);
+    params.append('wallCtrl',p.wallCtrl||0); params.append('throwRatio',p.throwRatio||0);
+    fetch(GAS_URL + '?' + params.toString()).catch(() => {});
+  });
+}
+
+function generateIndividualSummary(name, d, m, s, wallCtrl, throwRatio) {
+  const lines = [];
+  lines.push(`過去100戦平均のバトルの傾向によると、キャンセルドライブラッシュ${d.cdr||0}%・OD技${d.od||0}%・パリィドライブラッシュ${d.pdr||0}%と、ゲージの攻撃活用率は<strong>${m.attackIdx}/100</strong>。`);
+  if(wallCtrl >= 55) lines.push(`壁際支配率${wallCtrl}%と高く、コーナーでの崩しを得意とする。`);
+  else if(wallCtrl <= 45) lines.push(`壁際支配率${wallCtrl}%と低め。追い詰められる場面が多い傾向がある。`);
+  else lines.push(`壁際の攻防は${wallCtrl}%とほぼ互角の展開が多い。`);
+  if(throwRatio >= 55) lines.push(`投げ攻勢率${throwRatio}%と投げを積極的に活用する崩し型。`);
+  else lines.push(`投げ攻勢率${throwRatio}%。投げよりも技での崩しを好むスタイル。`);
+  lines.push(`守備消耗度${m.defenseIdx}/100（リバーサル${d.dr||0}%・ダメージ消費${d.dmg||0}%から算出）。${m.defenseIdx >= 50 ? 'ガードによるゲージ消耗が課題となる場面も。' : 'ゲージをしっかり攻撃に回せている。'}パニッシュカウンター被弾${d.diRecvPC||0}回も追加の消耗要因として参考値。`);
+  return lines.join('<br>');
+}
+
+function selectTitle(player, index) {
+  if(!window._titleData) return;
+  if(player === 'A') window._titleData.selectedA = index;
+  else window._titleData.selectedB = index;
+  for(let i = 0; i < 3; i++) {
+    const btn = document.getElementById(`titleBtn${player}${i}`);
+    if(!btn) continue;
+    const active = i === (player === 'A' ? window._titleData.selectedA : window._titleData.selectedB);
+    btn.style.background  = active ? 'var(--accent)' : 'var(--surface2)';
+    btn.style.borderColor = active ? 'var(--accent)' : 'var(--border)';
+    btn.style.color       = active ? 'white' : 'var(--text-dim)';
+  }
+  const x = window._titleData;
+  const iA = x.selectedA, iB = x.selectedB;
+  const tA = x.titlesA[iA], tB = x.titlesB[iB];
+  const tACat = x.catsA[iA], tBCat = x.catsB[iB];
+  const elA = document.getElementById('selectedTitleA');
+  const elB = document.getElementById('selectedTitleB');
+  if(elA) elA.textContent = `『${tA}』`;
+  if(elB) elB.textContent = `『${tB}』`;
+  const rA = document.getElementById('reasonA');
+  const rB = document.getElementById('reasonB');
+  if(player === 'A' && rA) rA.innerHTML = generateTitleReason(x.dA, x.mA, x.sA, x.wallCtrlA, x.throwRatioA, tA, tACat);
+  if(player === 'B' && rB) rB.innerHTML = generateTitleReason(x.dB, x.mB, x.sB, x.wallCtrlB, x.throwRatioB, tB, tBCat);
+  updateAllOutputs();
+}
+
+function updateAllOutputs() {
+  if(!window._titleData) return;
+  const x = window._titleData;
+  const iA = x.selectedA, iB = x.selectedB;
+  const tA = x.titlesA[iA], tB = x.titlesB[iB];
+  const tACat = x.catsA[iA], tBCat = x.catsB[iB];
+
+  const castText = generateCastScript(
+    x.nameA, x.nameB, x.dA, x.dB, x.mA, x.mB, x.sA, x.sB,
+    x.wallCtrlA, x.wallCtrlB, x.throwRatioA, x.throwRatioB,
+    x.rankA, x.rankB, x.charaA, x.charaB, x.opA, x.opB,
+    [tA, tA, tA, tACat, tACat, tACat],
+    [tB, tB, tB, tBCat, tBCat, tBCat]
+  );
+  const castEl = document.getElementById('castScriptText');
+  if(castEl) castEl.innerHTML = castText;
+
+  updateXPost();
+
+  const params = new URLSearchParams({
+    playerA: x.nameA, titleA: tA,
+    charaA:  x.charaA || '', rankA: x.rankA || '', opA: x.opA || '',
+    playerB: x.nameB, titleB: tB,
+    charaB:  x.charaB || '', rankB: x.rankB || '', opB: x.opB || '',
+  });
+  const url = `https://BridgeFTC.github.io/bftc-stream/bftc-matchcard.html?${params.toString()}`;
+  const mcEl = document.getElementById('matchcardUrl');
+  if(mcEl) mcEl.innerHTML = `
+    <div class="cast-script-card">
+      <div class="cast-script-label">🎬 OBS ブラウザソース URL</div>
+      <button class="btn-copy" onclick="copyMatchcardUrl()" style="position:static;float:right;">コピー</button>
+      <div id="matchcardUrlText" style="font-size:12px;color:var(--text-dim);word-break:break-all;line-height:1.8;margin-top:8px;">${url}</div>
+      <div style="margin-top:12px;">
+        <a href="${url}" target="_blank" style="display:inline-block;background:var(--surface2);border:1px solid var(--border);color:var(--text-dim);font-family:'Noto Sans JP',sans-serif;font-size:12px;padding:6px 14px;border-radius:3px;text-decoration:none;">🔗 プレビュー</a>
+      </div>
+    </div>
+  `;
+
+  // カード再描画
+  renderCards();
+}
+
+function copyMatchcardUrl() {
+  const el = document.getElementById('matchcardUrlText');
+  if(el) navigator.clipboard.writeText(el.textContent).then(() => showToast('✓ URLをコピーしました'));
+}
+
+function generateStyleReason(d, m, s, wallCtrl, throwRatio) {
+  const type = s.type;
+  const parts = [];
+  if(type.includes('超攻撃') || type.includes('積極攻撃') || type.includes('OD依存') || type.includes('大技連打')) {
+    parts.push(`攻撃圧力指数${m.attackIdx}/100（キャンセルドライブラッシュ${d.cdr||0}%・OD技${d.od||0}%・パリィドライブラッシュ${d.pdr||0}%の合計）`);
+  }
+  if(type.includes('壁際') || type.includes('コーナー') || type.includes('壁詰め')) {
+    parts.push(`壁際支配率${wallCtrl}%（追い詰め${d.wallAtk||0}秒 vs 追い詰められ${d.wallDef||0}秒）`);
+  }
+  if(type.includes('投げ')) { parts.push(`投げ命中${d.throwGive||0}回・投げ攻勢率${throwRatio}%`); }
+  if(type.includes('パリィ')) { parts.push(`パリィ成功${d.dpSuc||0}回・ジャストパリィ${d.justParry||0}回`); }
+  if(type.includes('SA3')) { parts.push(`SA Lv3使用率${d.sa3||0}%`); }
+  if(type.includes('SA2')) { parts.push(`SA Lv2使用率${d.sa2||0}%`); }
+  if(type.includes('守備') || type.includes('受け師') || type.includes('リバーサル')) {
+    parts.push(`守備消耗度${m.defenseIdx}/100・ダメージ消費${d.dmg||0}%`);
+  }
+  if(parts.length === 0) {
+    parts.push(`攻撃圧力指数${m.attackIdx}/100・守備消耗度${m.defenseIdx}/100・壁際支配率${wallCtrl}%の総合判定`);
+  }
+  return '判定根拠：' + parts.join('、') + '。';
+}
+
+function generateTitleReason(d, m, s, wallCtrl, throwRatio, title, category) {
+  switch(category) {
+    case 'cdr_high': return `キャンセルドライブラッシュ使用率${d.cdr||0}%。ドライブゲージ全消費の中で高い割合を占め、積極的に間合いを詰めて攻撃する前進スタイルが数字に表れているため。`;
+    case 'od_high': return `OD技使用率${d.od||0}%。OD技は通常技より威力・性能が高く、これを積極的に使い続けることでゲージをダメージに直結させるスタイルからこの二つ名に。`;
+    case 'pdr_high': return `パリィドライブラッシュ使用率${d.pdr||0}%。パリィを守りだけでなく攻めの起点として使い、弾いてから踏み込む積極的なスタイルが数字に表れているため。`;
+    case 'wall_high': return `壁際追い詰め時間${d.wallAtk||0}秒・追い詰められ時間${d.wallDef||0}秒。追い詰め時間が追い詰められ時間を上回っており、コーナーでの主導権を握り続けるスタイルが数字に表れているため。`;
+    case 'throw_high': return `投げ命中${d.throwGive||0}回／試合・投げ攻勢率${throwRatio}%。被弾${d.throwRecv||0}回と比較しても投げへの積極性が高く、投げを主軸に崩すスタイルが数字から読み取れるため。`;
+    case 'parry_high': return `パリィ成功${d.dpSuc||0}回／試合。相手の攻撃を弾く精度が高く、パリィで場を支配するスタイルが数字に表れているため。`;
+    case 'just_high': return `ジャストパリィ${d.justParry||0}回／試合。通常のパリィより精密な入力が必要なジャストパリィをこれだけ決めているのは、反応精度が突出して高い証拠。この精度からこの二つ名に。`;
+    case 'sa3_high': return `SA Lv3使用率${d.sa3||0}%。ゲージを最大まで溜めてから一気に放つ大技主義のスタイルが数字に表れているため。`;
+    case 'sa2_high': return `SA Lv2使用率${d.sa2||0}%。Lv3より素早く使えるコスト効率の良いSAを主軸に、テンポよく奥義を当てていくスタイルからこの二つ名に。`;
+    case 'sa1_high': return `SA Lv1使用率${d.sa1||0}%。素早いSAを連射して手数で圧倒するスタイルが数字に表れているため。`;
+    case 'di_high': return `ドライブインパクト命中${d.diHit||0}回／試合。DIを積極的に仕掛けて試合を動かすスタイルが数字に表れているため。`;
+    case 'reversal': return `ドライブリバーサル使用率${d.dr||0}%。起き攻めへの対応でリバーサルを積極的に活用し、守りから一瞬で切り返すスタイルがデータに表れているため。`;
+    case 'veteran': return `ランクマッチ${(d.rankMatch||0).toLocaleString()}回・累計${(d.pts||0).toLocaleString()}PT。この対戦数が示す長年の実戦経験こそがこの二つ名の根拠。`;
+    case 'efficient': return `ダメージ消費（ガードによるゲージ消耗）${d.dmg||0}%が低く抑えられており、ゲージを守備で削られる場面が少ない。攻撃に回せるゲージを常に確保している効率的な立ち回りからこの二つ名に。`;
+    case 'defense': return `ダメージ消費${d.dmg||0}%・リバーサル${d.dr||0}%と、ゲージを削られる・消費する場面が多い。それでも前に出続けるスタイルからこの二つ名に。`;
+    case 'ground_control': return `壁際追い詰め時間${d.wallAtk||0}秒・追い詰められ時間${d.wallDef||0}秒。壁際よりも中距離・地上戦での攻防が主体になっているデータからこの二つ名に。`;
+    case 'pressure': return `攻撃圧力指数${m.attackIdx}/100（CDR${d.cdr||0}%・OD${d.od||0}%・パリィドライブラッシュ${d.pdr||0}%の合計から算出）。ゲージを攻撃に集中させる高い圧力がデータに表れているため。`;
+    default: {
+      const opts = [
+        { val: d.cdr||0, text: `キャンセルドライブラッシュ${d.cdr||0}%` },
+        { val: d.od||0, text: `OD技${d.od||0}%` },
+        { val: wallCtrl, text: `壁際支配率${wallCtrl}%` },
+        { val: throwRatio, text: `投げ攻勢率${throwRatio}%` },
+        { val: d.pdr||0, text: `パリィドライブラッシュ${d.pdr||0}%` },
+        { val: d.dpSuc||0, text: `パリィ成功${d.dpSuc||0}回` },
+      ].sort((a,b) => b.val - a.val);
+      return `最も突出した数値は${opts[0].text}。特定の一点に偏らず読み合い・地上戦で戦うスタイルからこの二つ名に。`;
+    }
+  }
+}
+
+function generateMatchSummary(nameA, nameB, dA, dB, mA, mB, sA, sB, wallCtrlA, wallCtrlB) {
+  const lines = [];
+  const atkDiff = mA.attackIdx - mB.attackIdx;
+  const wallDiff = wallCtrlA - wallCtrlB;
+  lines.push(`過去100戦平均のバトルの傾向によると、<span class="match-summary-keyword">${nameA}</span>と<span class="match-summary-keyword">${nameB}</span>のマッチアップは、`);
+  if(Math.abs(atkDiff) >= 15) {
+    const attacker = atkDiff > 0 ? nameA : nameB;
+    const defender = atkDiff > 0 ? nameB : nameA;
+    lines.push(`攻撃圧力では${attacker}が優位（${Math.max(mA.attackIdx,mB.attackIdx)} vs ${Math.min(mA.attackIdx,mB.attackIdx)}）。${defender}がいかにゲージを守りながら反撃の機会を作れるかが鍵。`);
+  } else {
+    lines.push(`攻撃圧力は両者ほぼ拮抗（${mA.attackIdx} vs ${mB.attackIdx}）。読み合いの精度が勝敗を分けるカード。`);
+  }
+  if(Math.abs(wallDiff) >= 10) {
+    const wallWinner = wallDiff > 0 ? nameA : nameB;
+    lines.push(`壁際支配ではデータ上${wallWinner}が有利。コーナーの攻防がこの試合のハイライトになる可能性が高い。`);
+  }
+  if(sA.type !== sB.type) {
+    lines.push(`スタイルの異なる「${sA.type}」vs「${sB.type}」の好カード。`);
+  }
+  return lines.join('');
+}
+
+const EXISTING_TITLES = [
+  'ベビーフェイス・ジョーカー','燃ゆる緑の夢桜','この男、破天荒につき','ぐるぐる剛腕大監督',
+  '天を穿つ羽ばたき','亜空間大僧正','とっておきの業火球','陸奥のモチベ超人',
+  '若人よ、その先の道へ','電光石火','我道才響','決闘の魔術師',
+  'THE BEAST','進撃の重戦車','韓国発、黄金の右手','格闘ゲームの求道者',
+  '揺るがぬ誠実','新世紀の適格者','不遜なる逸材','忍の流儀',
+  '想像を奏でるパッド神','島根の仙人','激流の貴公子','2D神',
+  'レッツリーサル','ヒーローオブサンライズ','リーサルの匠','最強の矛',
+  '命知らずの賞金稼ぎ','富山の才能','終わりなき功夫','頼れる剛速球',
+  'ジ・アンストッパブル','銀盤の韋駄天','Mr.最適解','ヴァイオレンス・エンペラー',
+  '正義執行人','全ての格ゲーに愛されし男','修羅','その勝ち方、悪魔的',
+  '不敵な新潮流','星を砕きし者','新時代への特異点','ぶち真面目系ヒーロー',
+  '少年は今、漢になる','永世のエース','昇竜乱舞（ドラゴンダンス）は終わらない','静かなる理論値'
+];
+
+const usedTitles = new Set();
+
+const TITLE_POOL = {
+  cdr_high: ['間合いを消す者','疾駆の使い手','間合いを制する鉄拳','刹那に距離を刈る者','踏み込みの鬼','前進を止められぬ者','嵐の如く踏み込む者','間合いを喰らう者','突進で語る格闘家','疾風の如く迫る者','間合いを狩る者','前へ出続ける猛者','閃駆の使い手','間合いを刈り取る者','猛進の申し子','疾走する格闘家','前線を切り裂く者','間合いを焼き払う者','突風の如く踏む者','間合いを砕く者','烈風の踏み込み','間合いを吞み込む者','前線突破の申し子','疾駆で制する者'],
+  od_high: ['ゲージを爆発させる者','覚醒で仕留める猛者','OD技で押し切る者','渾身の一撃で語る者','ゲージを燃やし尽くす者','爆裂の申し子','覚醒に全てを賭ける者','OD砲で崩す猛者','灼熱のゲージ使い','炸裂する格闘家','覚醒技で完結する者','ゲージを解き放つ者','爆発に生きる格闘家','OD技一閃の猛者','覚醒で刻む者','ゲージを武器に変える者','爆炎の格闘家','覚醒技を信じる猛者','OD技で崩し切る者','灼熱の一発屋','爆裂で語る格闘家','覚醒という名の剣','ゲージを爆弾にする者','OD一閃の申し子'],
+  pdr_high: ['弾いて前へ出る者','弾きから踏み込む猛者','弾いて仕留める格闘家','反撃の申し子','弾いて崩す鋭刃','パリィで機先を制する者','弾いて刻む格闘家','攻守を一体にする者','弾きで間合いを詰める者','反射で攻める猛者','弾いて斬り込む格闘家','パリィから踏み込む鬼','弾いてから吞み込む者','反撃を前進に変える者','弾きで崩す申し子','攻守転換の体現者','弾いて勝機を掴む者','パリィを武器にする猛者','弾きながら前へ出る者','反射の鬼'],
+  wall_high: ['壁際で完結する者','コーナーで仕留める鬼','壁際の覇者','追い詰めて離さぬ猛者','端に君臨する者','コーナーの処刑人','壁際を制する鋭刃','追い込みの申し子','壁際で輝く格闘家','逃げ場を奪う者','コーナーで完殺する猛者','壁際の王者','端で完結する格闘家','追い詰めの鬼','コーナー制圧の申し子','壁を背負わせる猛者','退路を断つ者','壁際で決める格闘家','コーナーに閉じ込める者','端の覇者','追い込んで放さぬ鬼','壁際の申し子','コーナーで圧倒する者','壁際決戦の覇者'],
+  throw_high: ['投げで崩す鉄腕','掴んで放さぬ猛者','投げで仕留める格闘家','鉄の爪の使い手','掴みで制する鬼','豪腕の崩し師','投げで完結する格闘家','掴みの申し子','投げに生きる猛者','組み付く破壊者','掴みで語る格闘家','鷲掴みの格闘家','投げで刻む鉄腕','豪腕で崩す者','掴みが全ての格闘家','投げで圧倒する猛者','鉄腕の申し子','掴みで勝負する格闘家','投げを信じる猛者','豪腕一閃の格闘家','掴んで仕留める者','投げ一発の鬼','鉄爪の格闘家','崩しの鉄人'],
+  parry_high: ['攻撃を弾き続ける者','鉄壁のパリィ使い','弾きで制する猛者','鋼の見切り師','攻撃を糧にする格闘家','弾きの鬼','パリィで主導権を握る者','鉄壁の反射神経','攻撃を受け流す達人','弾いて崩す格闘家','パリィで場を支配する者','弾きの申し子','攻撃を跳ね返す猛者','鋼鉄の見切り','弾いて反撃する格闘家','パリィの鬼','攻撃を弾く達人','弾きで語る格闘家','パリィで圧倒する者','鋼の守り手'],
+  just_high: ['刹那に弾く者','零コンマの見切り師','完璧な瞬間に生きる格闘家','神速の見切り手','一瞬で弾く鬼','閃光の反射神経','刹那を支配する者','零コンマの鬼','瞬時に弾く格闘家','完璧な弾きの使い手','神域の見切り師','刹那の覇者','零コンマで制する者','一瞬の達人','閃光のジャスト使い','完璧な反射の申し子','刹那に命を賭ける者','零コンマの格闘家','瞬間を制する鬼','神速の弾き手'],
+  sa3_high: ['溜めて放つ砲手','大技一閃の猛者','フルゲージの破壊者','奥義で仕留める格闘家','溜め込んで爆発させる者','大技の申し子','SA3で完結する猛者','鉄砲の如く放つ者','奥義に全てを込める者','フルゲージの申し子','大技で決める格闘家','溜めて撃つ鬼','SA3一閃の格闘家','奥義を解き放つ者','大技で崩す猛者','溜め込む求道者','フルゲージの覇者','大技に賭ける格闘家','SA3を信じる猛者','一発に魂を込める者'],
+  sa2_high: ['鋭く放つ奥義師','SA2で畳み掛ける者','中奥義の申し子','機を見て放つ猛者','鋭刃の奥義師','SA2で刻む格闘家','中火力の覇者','素早き奥義の使い手','SA2一閃の格闘家','鋭い奥義師','中奥義を使いこなす者','機を逃さぬ奥義師','SA2で制する猛者','鋭く仕掛ける格闘家','中火力の申し子','素早き決め手の使い手'],
+  sa1_high: ['閃光で刻む格闘家','SA1連打の鬼','小技に奥義を宿す者','嵐の如く連射する者','手数で圧倒する猛者','SA1で制する格闘家','刻み続ける奥義師','怒涛のSA1使い'],
+  veteran: ['場数が作った猛者','鍛錬の果てに立つ者','歴戦の猛者','積み上げた戦歴の持ち主','千戦を越えた格闘家','場数で語る猛者','百戦の記憶を持つ者','鍛え上げた格闘家','修羅場をくぐった猛者','場数こそが武器','歴戦の強者','積み重ねた者の格','戦場で育った格闘家','場数の申し子','千の戦いを刻んだ者','鍛錬の化身','歴戦の証を持つ猛者','場数で磨かれた者','百戦錬磨の格闘家','修羅の記憶を持つ者'],
+  efficient: ['ゲージを無駄にしない鬼','鋭利な一手の使い手','無駄打ちを知らぬ格闘家','精密な攻撃者','一手一手に刃を宿す者','ゲージ管理の申し子','無駄のない攻めの格闘家','鋭利な戦略家','ゲージを研ぎ澄ます者','無駄打ちゼロの猛者','精密機械の如く攻める者','鋭刃の格闘家','ゲージを最適に解き放つ者','無駄を削り取った格闘家','効率の鬼','精鋭の攻撃者'],
+  defense: ['削られても前へ出る猛者','消耗を恐れぬ格闘家','鉄の意志で前進する者','削られながら勝つ鬼','消耗戦を制する猛者','守りながら牙を剥く者','鉄壁の前進者','削られても折れぬ格闘家','消耗を力に変える猛者','守りから攻めに転じる鬼','傷だらけの前進者','耐えて勝つ猛者','鉄の守りで攻める格闘家','消耗戦の覇者','守りを武器にする猛者','耐久の申し子'],
+  reversal: ['起き上がりに牙を宿す者','逆転の一閃','切り返しの鬼','嵐の如く切り返す者','リバーサルで仕留める猛者','逆境で輝く格闘家','一瞬で逆転する者','切り返しの申し子','逆転の鬼','起き攻めを切り裂く者','割り込みで返す猛者','逆転劇の使い手','反撃の一閃','起き上がりで完結する者','リバーサルを信じる猛者','切り返しの達人'],
+  di_high: ['DIで試合を動かす者','鉄槌の格闘家','インパクトで制する猛者','DI一閃の格闘家','強打で崩す猛者','DIで仕掛ける格闘家','鉄槌の申し子','インパクトを信じる猛者','DIで読み勝つ格闘家','強打の覇者','インパクトの鬼','DI一発で変える者'],
+  ground_control: ['地上戦で制する者','差し合いの鬼','地上を支配する猛者','鋭い差し合いの使い手','地上で完結する格闘家','差し合いで崩す猛者','地上戦の覇者','鋭刃の差し合い師','地上を制する鬼','差し合いの申し子','地上戦の達人','中距離の覇者','地上で読み勝つ格闘家','差し合いで完結する者','地上戦の求道者'],
+  pressure: ['攻撃の手を緩めぬ鬼','圧力で押し切る猛者','嵐の如く攻め続ける者','圧力の化身','攻撃を止めない格闘家','圧倒的な圧力の使い手','怒涛の攻撃者','圧力で崩す鬼','嵐の前進者','攻撃でペースを握る者','圧力の申し子','怒涛の格闘家'],
+  inverted: ['その踏み込み、嵐の如く','その間合い、刹那に消ゆ','その前進、止まるを知らず','その疾駆、風を断つ','そのゲージ、爆炎と化す','その一発、天を砕く','その弾き、刃の如く','その反射、光より速く','その追い込み、逃げ場なし','そのコーナー、死地と化す','その投げ、嵐の如く','その掴み、鉄の如し','その弾き、鋼の如し','その一瞬、神の領域','その零コンマ、命を賭す','その大技、天地を揺るがす','その一閃、全てを終わらせる','その読み、一歩先を行く','その戦歴、刻まれし証','見よ、嵐の踏み込みを','見よ、鉄腕の崩しを','見よ、刹那の弾きを','いざ、爆裂の覚醒','いざ、壁際で完結せよ','いざ、鉄の爪で掴め','轟く、疾駆の前進','轟く、爆炎のゲージ','轟く、豪腕の一閃','刮目せよ、その踏み込みを','刮目せよ、その弾きを','刮目せよ、その爆発を','迫る、嵐の如き前進','迫る、鉄の如き掴み','迫る、刃の如き弾き','燃ゆ、覚醒の炎','燃ゆ、爆裂の意志','燃ゆ、前進の魂','閃く、刹那の見切り','閃く、零コンマの反射','閃く、一瞬の大技','砕く、鉄腕の一撃','砕く、嵐の踏み込み','砕く、爆炎のゲージ'],
+  default: ['読み合いで制する者','駆け引きの鬼','読みで崩す格闘家','読み勝ちで完結する者','読みで圧倒する猛者','駆け引きの申し子','読みで場を支配する者','読み合いの覇者','駆け引きで崩す猛者','読みで勝負する格闘家','差し合いで読み勝つ者','地上戦で制する猛者','ペースを握る格闘家','試合を組み立てる猛者','流れを変える鬼','ペースで圧倒する者','試合を動かす格闘家','流れを読む猛者','冷静に崩す格闘家','間合いで読み勝つ者','差し合いの申し子','地上を制する鬼','中距離の覇者','差し合いで崩す猛者','地上戦の鬼','間合いの読み師','差し合いで勝負する者','地上戦で語る格闘家','読みで前へ出る者','駆け引きで前進する格闘家','差し合いを制する猛者','地上の覇者']
+};
+
+function generateTitle(name, d, m, sStyle, wallCtrl, throwRatio) {
+  const categoryPools = [];
+  if(d.cdr >= 35)          categoryPools.push({ key: 'cdr_high',      pool: TITLE_POOL.cdr_high });
+  if(d.od >= 30)           categoryPools.push({ key: 'od_high',       pool: TITLE_POOL.od_high });
+  if(d.pdr >= 10)          categoryPools.push({ key: 'pdr_high',      pool: TITLE_POOL.pdr_high });
+  if(wallCtrl >= 60)       categoryPools.push({ key: 'wall_high',     pool: TITLE_POOL.wall_high });
+  if(throwRatio >= 60)     categoryPools.push({ key: 'throw_high',    pool: TITLE_POOL.throw_high });
+  if(d.dpSuc >= 3)         categoryPools.push({ key: 'parry_high',    pool: TITLE_POOL.parry_high });
+  if(d.justParry >= 1)     categoryPools.push({ key: 'just_high',     pool: TITLE_POOL.just_high });
+  if(d.sa3 >= 40)          categoryPools.push({ key: 'sa3_high',      pool: TITLE_POOL.sa3_high });
+  if(d.sa2 >= 50)          categoryPools.push({ key: 'sa2_high',      pool: TITLE_POOL.sa2_high });
+  if(d.sa1 >= 50)          categoryPools.push({ key: 'sa1_high',      pool: TITLE_POOL.sa1_high });
+  if(d.di >= 3)            categoryPools.push({ key: 'di_high',       pool: TITLE_POOL.di_high });
+  if(d.dr >= 2)            categoryPools.push({ key: 'reversal',      pool: TITLE_POOL.reversal });
+  if(d.rankMatch >= 30000) categoryPools.push({ key: 'veteran',       pool: TITLE_POOL.veteran });
+  if(m.defenseIdx <= 30)   categoryPools.push({ key: 'efficient',     pool: TITLE_POOL.efficient });
+  if(m.defenseIdx >= 60)   categoryPools.push({ key: 'defense',       pool: TITLE_POOL.defense });
+  if(wallCtrl <= 45)       categoryPools.push({ key: 'ground_control',pool: TITLE_POOL.ground_control });
+  if(m.attackIdx >= 65)    categoryPools.push({ key: 'pressure',      pool: TITLE_POOL.pressure });
+  categoryPools.push({ key: 'default', pool: TITLE_POOL.default });
+
+  const useInvertedForFirst = Math.random() < 0.5;
+  const invertedPool = { key: 'inverted', pool: TITLE_POOL.inverted };
+  const poolsForT1 = useInvertedForFirst ? [...categoryPools, invertedPool] : categoryPools;
+  const poolsForT2 = useInvertedForFirst ? categoryPools : [...categoryPools, invertedPool];
+
+  const shuffledCategories = [...poolsForT1].sort(() => Math.random() - 0.5);
+  let t1 = null, t1Category = null;
+  for(const cat of shuffledCategories) {
+    const available = cat.pool.filter(t => !EXISTING_TITLES.includes(t) && !usedTitles.has(t));
+    if(available.length > 0) { t1 = available[Math.floor(Math.random() * available.length)]; t1Category = cat.key; break; }
+  }
+  t1 = t1 || TITLE_POOL.default[0]; t1Category = t1Category || 'default';
+  usedTitles.add(t1);
+
+  let t2 = null, t2Category = null;
+  const shuffledForT2 = [...poolsForT2].filter(cat => cat.key !== t1Category).sort(() => Math.random() - 0.5);
+  for(const cat of shuffledForT2) {
+    const available = cat.pool.filter(t => !EXISTING_TITLES.includes(t) && !usedTitles.has(t) && t !== t1);
+    if(available.length > 0) { t2 = available[Math.floor(Math.random() * available.length)]; t2Category = cat.key; break; }
+  }
+  if(!t2) {
+    const allAvailable = categoryPools.flatMap(cat => cat.pool).filter(t => !EXISTING_TITLES.includes(t) && !usedTitles.has(t) && t !== t1);
+    t2 = allAvailable.length > 0 ? allAvailable[Math.floor(Math.random() * allAvailable.length)] : TITLE_POOL.default[1];
+    t2Category = 'default';
+  }
+  usedTitles.add(t2);
+
+  let t3 = null, t3Category = null;
+  const shuffledForT3 = [...categoryPools].filter(cat => cat.key !== t1Category && cat.key !== t2Category && cat.key !== 'inverted').sort(() => Math.random() - 0.5);
+  for(const cat of shuffledForT3) {
+    const available = cat.pool.filter(t => !EXISTING_TITLES.includes(t) && !usedTitles.has(t) && t !== t1 && t !== t2);
+    if(available.length > 0) { t3 = available[Math.floor(Math.random() * available.length)]; t3Category = cat.key; break; }
+  }
+  if(!t3) {
+    const allAvailable = categoryPools.flatMap(cat => cat.pool).filter(t => !EXISTING_TITLES.includes(t) && !usedTitles.has(t) && t !== t1 && t !== t2);
+    t3 = allAvailable.length > 0 ? allAvailable[Math.floor(Math.random() * allAvailable.length)] : TITLE_POOL.default[2];
+    t3Category = 'default';
+  }
+  usedTitles.add(t3);
+
+  return [t1, t2, t3, t1Category, t2Category, t3Category];
+}
+
+function generateCastScript(nameA, nameB, dA, dB, mA, mB, sA, sB, wallCtrlA, wallCtrlB, throwRatioA, throwRatioB, rankA, rankB, charaA, charaB, opA, opB, titlesA, titlesB) {
+  const keyA = sA.tags[0] || 'アグレッシブ';
+  const keyB = sB.tags[0] || 'バランス型';
+  const infoA = [rankA, charaA, opA].filter(Boolean).join('・');
+  const infoB = [rankB, charaB, opB].filter(Boolean).join('・');
+  const titleA = titlesA ? titlesA[0] : sA.type;
+  const titleB = titlesB ? titlesB[0] : sB.type;
+  const keyPoints = [];
+  const wallDiff = Math.abs(wallCtrlA - wallCtrlB);
+  const throwMax = Math.max(throwRatioA, throwRatioB);
+  const throwWinnerName = throwRatioA >= throwRatioB ? nameA : nameB;
+  const wallWinnerName = wallCtrlA >= wallCtrlB ? nameA : nameB;
+  const wallVal = Math.max(wallCtrlA, wallCtrlB);
+  const odMax = Math.max(dA.od||0, dB.od||0);
+  const odWinner = (dA.od||0) >= (dB.od||0) ? nameA : nameB;
+  const cdrMax = Math.max(dA.cdr||0, dB.cdr||0);
+  const cdrWinner = (dA.cdr||0) >= (dB.cdr||0) ? nameA : nameB;
+  const parryMax = Math.max(dA.dpSuc||0, dB.dpSuc||0);
+  const parryWinner = (dA.dpSuc||0) >= (dB.dpSuc||0) ? nameA : nameB;
+  const sa3Max = Math.max(dA.sa3||0, dB.sa3||0);
+  const sa3Winner = (dA.sa3||0) >= (dB.sa3||0) ? nameA : nameB;
+  if(wallDiff >= 10 && (dA.wallAtk||0) > (dA.wallDef||0) && (dB.wallAtk||0) > (dB.wallDef||0)) keyPoints.push(`データが示すキーポイントは<em>壁際の攻防</em>です。${wallWinnerName}の壁際支配率は${wallVal}%。コーナーに追い込んだ後の崩しパターンに注目してください。`);
+  else if((dA.wallDef||0) > (dA.wallAtk||0) && (dB.wallDef||0) > (dB.wallAtk||0)) keyPoints.push(`両者ともに壁を背負う時間の方が長いデータが出ています。コーナーではなく<em>地上戦・中距離の攻防</em>がこの試合の主戦場になりそうです。差し合いと間合い管理の精度が勝敗を分けます。`);
+  if(throwMax >= 55) keyPoints.push(`<em>投げの読み合い</em>も見逃せません。${throwWinnerName}の投げ攻勢率${throwMax}%と、接近戦での投げ択が試合の流れを左右しそうです。`);
+  if(odMax >= 28) keyPoints.push(`<em>OD技の使いどころ</em>がこの試合の分岐点になりそうです。${odWinner}のOD技使用率${odMax}%。ゲージが残っている場面での強行動に注目。`);
+  if(cdrMax >= 35) keyPoints.push(`<em>ドライブラッシュへの対応</em>が鍵を握ります。${cdrWinner}のキャンセルドライブラッシュ${cdrMax}%は高水準。間合い管理と迎撃タイミングが勝負の分かれ目。`);
+  if(parryMax >= 2.5) keyPoints.push(`<em>パリィの読み合い</em>にも注目です。${parryWinner}のパリィ成功${parryMax}回は高水準。単調な連携は危険、投げや遅らせで崩す工夫が求められます。`);
+  if(sa3Max >= 40) keyPoints.push(`<em>必殺技のタイミング</em>も見どころです。${sa3Winner}のSA3使用率${sa3Max}%。大技を溜めている状況での読み合いがこの試合のクライマックスになりそうです。`);
+  if(keyPoints.length === 0) keyPoints.push(`データが示すキーポイントは<em>壁際の攻防</em>です。${wallWinnerName}の壁際支配率${wallVal}%。コーナーでの攻防に注目してください。`);
+  const selectedPoints = keyPoints.slice(0, 2).join('<br>');
+  return `
+    さあ始まりました！本日の注目カードは<em>${nameA}</em> vs <em>${nameB}</em>！<br><br>
+    今回の対戦カードは<em>『${titleA}』${nameA}</em>と<em>『${titleB}』${nameB}</em>です。<br><br>
+    ${infoA ? `${nameA}は<em>${infoA}</em>。` : ''}過去100戦平均のバトルの傾向によると、${nameA}のプレイスタイルは<em>${keyA}</em>型。
+    キャンセルドライブラッシュ${dA.cdr||0}%、OD技${dA.od||0}%と、ゲージを攻撃に集中させる前線圧力型プレイヤーです。<br><br>
+    ${infoB ? `対する${nameB}は<em>${infoB}</em>。` : `対する${nameB}は`}<em>${keyB}</em>型。
+    ${(dB.throwGive||0) > 3 ? `投げ命中${dB.throwGive||0}回と投げを絡めた崩しが武器。` : `パリィドライブラッシュ${dB.pdr||0}%とゲージの使い分けが巧みなプレイヤー。`}<br><br>
+    ${selectedPoints}<br><br>
+    それでは、試合開始です！<br><br>
+    <span style="font-size:12px;color:var(--text-dim);border-top:1px solid var(--border);display:block;padding-top:12px;margin-top:8px;">
+      📌 二つ名候補（${nameA}）：『${titlesA[0]}』／『${titlesA[1]}』／『${titlesA[2]}』<br>
+      📌 二つ名候補（${nameB}）：『${titlesB[0]}』／『${titlesB[1]}』／『${titlesB[2]}』
+    </span>
+  `;
+}
+
+function generateXPost(nameA, nameB, titleA, titleB, charaA, charaB, styleA, styleB, dA, dB, mA, mB, wallCtrlA, wallCtrlB, throwRatioA, throwRatioB, tA1Cat, tB1Cat) {
+  const charaLineA = charaA ? `(${charaA})` : '';
+  const charaLineB = charaB ? `(${charaB})` : '';
+  const text = `⚔️ 対戦カード紹介\n\n『${titleA}』${nameA}${charaLineA}\n\nvs\n\n『${titleB}』${nameB}${charaLineB}\n\n📺 twitch.tv/bridgeftc\n#BridgeFTC #対戦カード`;
+  return text.length <= 140 ? text : text.slice(0, 137) + '...';
+}
+
+function updateXPost() {
+  if(!window._titleData) return;
+  const x = window._titleData;
+  const iA = x.selectedA, iB = x.selectedB;
+  const tA = x.titlesA[iA], tB = x.titlesB[iB];
+  const tACat = x.catsA[iA], tBCat = x.catsB[iB];
+  const text = generateXPost(x.nameA, x.nameB, tA, tB, x.charaA, x.charaB, x.sA.type, x.sB.type, x.dA, x.dB, x.mA, x.mB, x.wallCtrlA, x.wallCtrlB, x.throwRatioA, x.throwRatioB, tACat, tBCat);
+  const el = document.getElementById('xPostText');
+  const cnt = document.getElementById('xCharCount');
+  if(el) el.innerText = text;
+  if(cnt) cnt.textContent = text.length + '文字';
+}
+
+function copyXPost() {
+  const el = document.getElementById('xPostText');
+  navigator.clipboard.writeText(el.innerText).then(() => showToast('✓ X投稿文をコピーしました'));
+}
+
+function copyScript() {
+  const el = document.getElementById('castScriptText');
+  navigator.clipboard.writeText(el.innerText).then(() => showToast('✓ スクリプトをコピーしました'));
+}
+
+// ===== プレイヤーカード描画 =====
+function drawPlayerCard(canvasId, playerName, chara, title, styleType, radarVals, radarLabels) {
+  const canvas = document.getElementById(canvasId);
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const W = 1280, H = 720, BOTTOM = 56, MAIN_H = H - BOTTOM;
+  const LEFT_W = W / 2;
+
+  ctx.clearRect(0, 0, W, H);
+
+  // 背景
+  ctx.fillStyle = '#0c0c10';
+  ctx.fillRect(0, 0, W, H);
+
+  // 左側グロー
+  const glowL = ctx.createRadialGradient(LEFT_W * 0.4, MAIN_H / 2, 0, LEFT_W * 0.4, MAIN_H / 2, LEFT_W * 0.8);
+  glowL.addColorStop(0, 'rgba(120,0,0,0.10)');
+  glowL.addColorStop(1, 'rgba(0,0,0,0)');
+  ctx.fillStyle = glowL;
+  ctx.fillRect(0, 0, W, MAIN_H);
+
+  // グリッド線
+  ctx.strokeStyle = 'rgba(255,255,255,0.018)';
+  ctx.lineWidth = 1;
+  for (let x = 0; x < W; x += 40) { ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, MAIN_H); ctx.stroke(); }
+  for (let y = 0; y < MAIN_H; y += 40) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke(); }
+
+  // 中央区切り線
+  const divGrad = ctx.createLinearGradient(LEFT_W, 0, LEFT_W, MAIN_H);
+  divGrad.addColorStop(0, 'rgba(180,0,0,0)');
+  divGrad.addColorStop(0.2, '#c00');
+  divGrad.addColorStop(0.8, '#c00');
+  divGrad.addColorStop(1, 'rgba(180,0,0,0)');
+  ctx.strokeStyle = divGrad;
+  ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(LEFT_W, 0); ctx.lineTo(LEFT_W, MAIN_H); ctx.stroke();
+
+  // 角装飾
+  function drawCorner(x, y, dx, dy) {
+    ctx.strokeStyle = '#cc0000'; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(x + dx * 20, y); ctx.lineTo(x, y); ctx.lineTo(x, y + dy * 20); ctx.stroke();
+  }
+  drawCorner(12, 12, 1, 1); drawCorner(W - 12, 12, -1, 1);
+  drawCorner(12, MAIN_H - 12, 1, -1); drawCorner(W - 12, MAIN_H - 12, -1, -1);
+
+  // ===== 左エリア =====
+  ctx.save();
+  ctx.beginPath(); ctx.rect(0, 0, LEFT_W, MAIN_H); ctx.clip();
+
+  // プレイヤーネーム
+  ctx.textAlign = 'center';
+  ctx.fillStyle = '#ffffff';
+  ctx.font = 'bold 42px "Noto Sans JP", sans-serif';
+  ctx.fillText(playerName, LEFT_W / 2, 80);
+
+  ctx.fillStyle = '#cc0000';
+  ctx.font = 'bold 12px sans-serif';
+  ctx.fillText('PLAYER', LEFT_W / 2, 102);
+
+  // 六角形レーダーチャート
+  const cx = LEFT_W / 2, cy = 390, r = 200;
+  const n = 6, angleStep = (Math.PI * 2) / n, startAngle = -Math.PI / 2;
+
+  function hexPoint(radius, i) {
+    const angle = startAngle + angleStep * i;
+    return { x: cx + radius * Math.cos(angle), y: cy + radius * Math.sin(angle) };
+  }
+
+  // グリッド
+  [1, 0.67, 0.33].forEach(ratio => {
+    ctx.beginPath();
+    for (let i = 0; i < n; i++) {
+      const p = hexPoint(r * ratio, i);
+      i === 0 ? ctx.moveTo(p.x, p.y) : ctx.lineTo(p.x, p.y);
+    }
+    ctx.closePath();
+    ctx.strokeStyle = 'rgba(180,0,0,0.18)'; ctx.lineWidth = 1; ctx.stroke();
+  });
+
+  // 軸線
+  for (let i = 0; i < n; i++) {
+    const p = hexPoint(r, i);
+    ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(p.x, p.y);
+    ctx.strokeStyle = 'rgba(180,0,0,0.15)'; ctx.lineWidth = 0.8; ctx.stroke();
+  }
+
+  // データポリゴン
+  ctx.beginPath();
+  radarVals.forEach((v, i) => {
+    const p = hexPoint(r * Math.min(v, 100) / 100, i);
+    i === 0 ? ctx.moveTo(p.x, p.y) : ctx.lineTo(p.x, p.y);
+  });
+  ctx.closePath();
+  ctx.fillStyle = 'rgba(180,0,0,0.22)'; ctx.fill();
+  ctx.strokeStyle = '#cc0000'; ctx.lineWidth = 1.5; ctx.stroke();
+
+  // 頂点ドット
+  radarVals.forEach((v, i) => {
+    const p = hexPoint(r * Math.min(v, 100) / 100, i);
+    ctx.beginPath(); ctx.arc(p.x, p.y, 4, 0, Math.PI * 2);
+    ctx.fillStyle = '#cc0000'; ctx.fill();
+  });
+
+  // ラベル
+  ctx.fillStyle = '#888888';
+  ctx.font = 'bold 15px sans-serif';
+  ctx.textAlign = 'center';
+  radarLabels.forEach((label, i) => {
+    const p = hexPoint(r + 30, i);
+    ctx.fillText(label, p.x, p.y + 5);
+  });
+
+  ctx.restore();
+
+  // ===== 右エリア =====
+  ctx.save();
+  ctx.beginPath(); ctx.rect(LEFT_W, 0, LEFT_W, MAIN_H); ctx.clip();
+
+  const RX = LEFT_W + 60;
+
+  // 二つ名ラベル
+  ctx.fillStyle = '#cc0000';
+  ctx.font = 'bold 13px sans-serif';
+  ctx.textAlign = 'left';
+  ctx.fillText('二つ名', RX, 120);
+
+  // 縦バー
+  ctx.fillStyle = '#cc0000';
+  ctx.fillRect(RX, 132, 4, 48);
+
+  // 二つ名テキスト
+  ctx.fillStyle = '#ffffff';
+  ctx.font = 'bold 30px "Noto Sans JP", sans-serif';
+  ctx.fillText(title, RX + 16, 166);
+
+  // プレイスタイルラベル
+  ctx.fillStyle = '#cc0000';
+  ctx.font = 'bold 13px sans-serif';
+  ctx.fillText('プレイスタイル', RX, 234);
+
+  // プレイスタイル値
+  ctx.fillStyle = '#e0e0e0';
+  ctx.font = 'bold 20px "Noto Sans JP", sans-serif';
+  ctx.fillText(styleType, RX, 270);
+
+  // 使用キャララベル
+  ctx.fillStyle = '#cc0000';
+  ctx.font = 'bold 13px sans-serif';
+  ctx.fillText('使用キャラ', RX, 380);
+
+  // ダイヤモンド
+  ctx.save();
+  ctx.translate(RX + 5, 400);
+  ctx.rotate(Math.PI / 4);
+  ctx.fillStyle = '#cc0000';
+  ctx.fillRect(-5, -5, 10, 10);
+  ctx.restore();
+
+  // キャラ名
+  ctx.fillStyle = '#bbbbbb';
+  ctx.font = 'bold 26px "Noto Sans JP", sans-serif';
+  ctx.fillText(chara || 'CHARACTER', RX + 22, 412);
+
+  // #BridgeFTC（白・大きく）
+  ctx.fillStyle = '#ffffff';
+  ctx.font = 'bold 36px sans-serif';
+  ctx.fillText('#BridgeFTC', RX, 510);
+
+  ctx.restore();
+
+  // ===== 下部バー =====
+  ctx.fillStyle = '#0a0000';
+  ctx.fillRect(0, MAIN_H, W, BOTTOM);
+  ctx.strokeStyle = 'rgba(140,0,0,0.5)'; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(0, MAIN_H); ctx.lineTo(W, MAIN_H); ctx.stroke();
+
+  ctx.textAlign = 'left';
+  ctx.fillStyle = '#cc0000';
+  ctx.font = 'bold 15px sans-serif';
+  ctx.fillText('BFTC 対戦会', 60, MAIN_H + 34);
+
+  ctx.textAlign = 'center';
+  ctx.fillStyle = 'rgba(255,255,255,0.7)';
+  ctx.font = 'bold 20px sans-serif';
+  ctx.fillText('BRIDGE FTC', W / 2, MAIN_H + 34);
+
+  ctx.textAlign = 'right';
+  ctx.fillStyle = '#444444';
+  ctx.font = '13px "Noto Sans JP", sans-serif';
+  ctx.fillText('闘う理由に、舞台を。', W - 60, MAIN_H + 34);
+}
+
+function renderCards() {
+  if (!window._titleData) return;
+  const x = window._titleData;
+  const tA = x.titlesA[x.selectedA];
+  const tB = x.titlesB[x.selectedB];
+  const labels = ['攻撃圧力','守備消耗','壁際支配','投げ攻め','パリィ力','SA活用'];
+
+  function getRadarVals(d, wallCtrl, throwRatio) {
+    return [
+      Math.min(100, ((d.cdr||0)+(d.od||0)+(d.pdr||0))*0.95),
+      Math.min(100, ((d.dr||0)+(d.dmg||0))*1.8),
+      wallCtrl || 50,
+      throwRatio || 50,
+      Math.min(100, (d.dpSuc||0)*20+(d.justParry||0)*15),
+      Math.max(d.sa2||0, d.sa3||0)
+    ];
+  }
+
+  drawPlayerCard('cardCanvasA', x.nameA, x.charaA, tA, x.sA.type, getRadarVals(x.dA, x.wallCtrlA, x.throwRatioA), labels);
+  drawPlayerCard('cardCanvasB', x.nameB, x.charaB, tB, x.sB.type, getRadarVals(x.dB, x.wallCtrlB, x.throwRatioB), labels);
+}
+
+function downloadCard(player) {
+  const canvasId = player === 'A' ? 'cardCanvasA' : 'cardCanvasB';
+  const canvas = document.getElementById(canvasId);
+  if (!canvas || !window._titleData) return;
+  const name = player === 'A' ? window._titleData.nameA : window._titleData.nameB;
+  const link = document.createElement('a');
+  link.download = `BFTC_${name}_card.png`;
+  link.href = canvas.toDataURL('image/png');
+  link.click();
+  showToast(`✓ ${name}のカードをダウンロードしました`);
+}
+</script>
+</body>
+</html>
