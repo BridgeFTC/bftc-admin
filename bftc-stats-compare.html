@@ -252,7 +252,17 @@
 
     <!-- TITLE SECTION -->
     <div class="section-title">二つ名</div>
-
+<div style="margin-bottom:20px;padding:20px 24px;background:var(--surface);border:1px solid var(--border);border-radius:6px;display:flex;align-items:center;gap:20px;flex-wrap:wrap;">
+  <button onclick="openNamingApp()"
+    style="background:var(--gold);border:none;border-radius:4px;color:#0a0a0f;font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:3px;padding:12px 28px;cursor:pointer;transition:all 0.2s;flex-shrink:0;"
+    onmouseover="this.style.opacity='0.85'" onmouseout="this.style.opacity='1'">
+    ⚡ AI で二つ名を生成する
+  </button>
+  <div>
+    <div style="font-size:12px;color:var(--text);margin-bottom:4px;">別タブでAI二つ名ジェネレーター（bftc-naming.html）を起動します</div>
+    <div style="font-size:11px;color:var(--text-dim);">スタッツを読み込んでプレイヤーに固有の二つ名を自由生成。採用するとここに自動反映されます。</div>
+  </div>
+</div>
     <!-- 二つ名生成設定パネル -->
     <div id="titleGenPanel" style="background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:20px;margin-bottom:16px;display:none;">
       <div style="font-family:'Bebas Neue',sans-serif;font-size:15px;letter-spacing:2px;color:var(--text-dim);margin-bottom:16px;">⚙ 二つ名生成設定（AとB共通）</div>
@@ -1753,6 +1763,38 @@ function copyScript() {
   const el = document.getElementById('castScriptText');
   const text = el.innerText;
   navigator.clipboard.writeText(text).then(() => showToast('✓ スクリプトをコピーしました'));
+}
+// ===== AI二つ名生成アプリを別タブで開く =====
+function openNamingApp() {
+  if (!window._titleData) {
+    showToast('⚠ 先に「比較を生成する」を実行してください');
+    return;
+  }
+  const x = window._titleData;
+  const payload = {
+    nameA: x.nameA, nameB: x.nameB,
+    charaA: x.charaA, charaB: x.charaB,
+    rankA: x.rankA, rankB: x.rankB,
+    opA: x.opA, opB: x.opB,
+    wallCtrlA: x.wallCtrlA, wallCtrlB: x.wallCtrlB,
+    throwRatioA: x.throwRatioA, throwRatioB: x.throwRatioB,
+    dA: { ...x.dA, styleType: x.sA?.type },
+    dB: { ...x.dB, styleType: x.sB?.type },
+  };
+  const encoded = encodeURIComponent(JSON.stringify(payload));
+  const url = `https://BridgeFTC.github.io/bftc-admin/bftc-naming.html?data=${encoded}`;
+  window.open(url, '_blank');
+}
+
+// ===== AI二つ名生成アプリからの受信 =====
+function receiveTitlesFromNaming(titleA, titleB) {
+  if (!window._titleData) return;
+  const x = window._titleData;
+  x.titlesA[x.selectedA] = titleA;
+  x.titlesB[x.selectedB] = titleB;
+  renderTitleGrid();
+  updateAllOutputs();
+  showToast(`✓ AI二つ名を反映しました：『${titleA}』／『${titleB}』`);
 }
 </script>
 </body>
